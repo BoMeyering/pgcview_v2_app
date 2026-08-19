@@ -1,0 +1,41 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Pending Approval — PGCView{% endblock %}
+
+{% block card_content %}
+<div class="text-center">
+
+  <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/30 mb-5">
+    <svg class="h-7 w-7 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  </div>
+
+  <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">Account pending approval</h2>
+  <p class="mt-2 text-sm text-gray-500 dark:text-slate-400">
+    Thanks for signing in, <strong class="text-gray-700 dark:text-slate-300">{{ user.first_name|default:user.email }}</strong>.<br />
+    Your account has been created and is waiting for an administrator to grant access.
+  </p>
+
+  <div class="mt-5 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800/50 px-4 py-4 text-left text-sm text-yellow-800 dark:text-yellow-300">
+    <p class="font-medium mb-1">What happens next?</p>
+    <ul class="list-disc list-inside space-y-1 text-yellow-700 dark:text-yellow-400">
+      <li>An admin will review your account request.</li>
+      <li>Once approved you can log back in and access the platform.</li>
+      <li>Contact your administrator if you need expedited access.</li>
+    </ul>
+  </div>
+
+  <div class="mt-6 border-t border-gray-100 dark:border-slate-700 pt-5">
+    <a href="{% url 'account_logout' %}"
+       class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+      </svg>
+      Sign out
+    </a>
+  </div>
+
+</div>
+{% endblock %}

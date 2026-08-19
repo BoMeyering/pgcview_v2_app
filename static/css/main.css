@@ -1,0 +1,10 @@
+/*
+  Site-wide base font size.
+  All Tailwind classes use rem, so changing this one value scales every
+  text-xs / text-sm / text-base / text-lg etc. proportionally.
+  Default browser/Tailwind baseline is 16px.
+  Adjust this value to taste — 17px or 18px are good starting points.
+*/
+html {
+  font-size: 18px;
+}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Configure — {{ job.name }} — PGCView{% endblock %}
+{% block page_title %}Configure Job{% endblock %}
+{% block page_subtitle %}
+  <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
+    {{ job.name }} &middot; {{ job.image_count }} image{{ job.image_count|pluralize }} uploaded
+  </p>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+<form method="POST" id="configureForm" x-data="configureJob()">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+  <div class="mb-4 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="space-y-5">
+
+    {# ── Uploaded images summary ────────────────────────────────────────── #}
+    <div class="rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-5">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100 mb-4">Uploaded Images</h3>
+      <div class="grid grid-cols-4 gap-3 sm:grid-cols-6">
+        {% for img in job.images.all %}
+        <div class="rounded-xl overflow-hidden border border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-700 aspect-square">
+          {% if img.image %}
+            <img src="{{ img.image.url }}" alt="{{ img.original_filename }}" class="w-full h-full object-cover" />
+          {% elif img.drive_thumbnail_url %}
+            <img src="{{ img.drive_thumbnail_url }}" alt="{{ img.original_filename }}" class="w-full h-full object-cover" />
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# ── Configure card ─────────────────────────────────────────────────── #}
+    <div class="rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-5">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100 mb-4">Configure</h3>
+
+      <div class="space-y-5">
+        <div>
+          <label for="{{ form.conf.id_for_label }}" class="flex items-center justify-between text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+            <span>Confidence threshold</span>
+            <span class="text-gray-500 dark:text-slate-400" x-text="Math.round(conf * 100) + '%'"></span>
+          </label>
+          {{ form.conf }}
+          <p class="mt-1 text-xs text-gray-400 dark:text-slate-500">Minimum detection confidence used when locating markers or quadrats.</p>
+        </div>
+
+        <div>
+          <label for="{{ form.marker_type.id_for_label }}" class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+            Marker type
+          </label>
+          {{ form.marker_type }}
+          <p class="mt-1 text-xs text-gray-400 dark:text-slate-500">Auto-detect determines this from the top detections; override it if you know the image type ahead of time.</p>
+        </div>
+      </div>
+    </div>
+
+    {# Actions #}
+    <div class="flex items-center justify-end gap-3">
+      <span x-show="warmingUp" x-transition
+            class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 dark:bg-amber-900/40 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 animate-pulse">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+        Job submitted — endpoint warming up…
+      </span>
+
+      <button type="button"
+              onclick="window.dispatchEvent(new CustomEvent('delete-job', { bubbles: true, detail: { name: '{{ job.name|escapejs }}', url: '{% url 'jobs:delete' pk=job.pk %}' } }))"
+              class="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+        Cancel
+      </button>
+      <button type="button"
+              @click="handleSubmit()"
+              :disabled="submitting"
+              class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition disabled:opacity-60 disabled:cursor-not-allowed">
+        <svg x-show="submitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <span x-text="submitting ? (warmingUp ? 'Warming up…' : 'Processing…') : 'Submit Job'"></span>
+      </button>
+    </div>
+
+  </div>
+</form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function configureJob() {
+  return {
+    conf: {{ form.conf.value|default:0.85 }},
+    submitting: false,
+    warmingUp: false,
+
+    async handleSubmit() {
+      this.submitting = true;
+      this.warmingUp = true;
+      try {
+        const csrfToken = document.querySelector('#configureForm [name=csrfmiddlewaretoken]').value;
+        const response = await fetch('{% url "jobs:warmup" pk=job.pk %}', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken },
+        });
+        const data = await response.json();
+        this.warmingUp = false;
+
+        if (!data.ready) {
+          alert('The inference endpoint did not respond in time. Please try again.');
+          this.submitting = false;
+          return;
+        }
+
+        document.getElementById('configureForm').submit();
+      } catch (e) {
+        this.warmingUp = false;
+        this.submitting = false;
+        alert('Something went wrong warming up the endpoint. Please try again.');
+      }
+    }
+  }
+}
+</script>
+{% endblock %}
