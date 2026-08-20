@@ -1,3 +1,4 @@
+import csv
 import json
 import shutil
 from pathlib import Path
@@ -5,12 +6,15 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
-from django.http import JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils.text import slugify
 from django.views.decorators.http import require_GET, require_POST
 
 from .forms import JobConfigureForm, JobSubmitForm
 from .models import Job, JobImage
+from .overlay import CLASS_COLORS_HEX, build_overlay_png
 from .runpod_client import RunPodError, run_full_pipeline, wait_for_ready
 from .utils import download_drive_image, get_google_access_token
 
@@ -48,7 +52,45 @@ def job_history(request):
 @login_required
 def job_detail(request, pk):
     job = get_object_or_404(Job, pk=pk, user=request.user)
-    return render(request, "jobs/detail.html", {"job": job})
+    overlay_images = [
+        {
+            "id": img.pk,
+            "name": img.original_filename,
+            "url": reverse("jobs:image_overlay", args=[img.pk]),
+            "class_proportions": (img.result or {}).get("segmentation", {}).get("class_proportions", {}),
+        }
+        for img in job.images.filter(status=JobImage.Status.COMPLETED)
+    ]
+    return render(request, "jobs/detail.html", {
+        "job": job,
+        "overlay_images": overlay_images,
+        "class_colors": CLASS_COLORS_HEX,
+    })
+
+
+@login_required
+def job_detections_csv(request, pk):
+    job = get_object_or_404(Job, pk=pk, user=request.user)
+    class_names = list(CLASS_COLORS_HEX.keys())
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{slugify(job.name)}-detections.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(["image_name", "roi_type", "markers_detected", "markers_imputed"] + class_names)
+
+    for img in job.images.all():
+        result = img.result or {}
+        detection = result.get("detection") or {}
+        proportions = result.get("segmentation", {}).get("class_proportions", {})
+        writer.writerow([
+            img.original_filename,
+            detection.get("region_type", ""),
+            detection.get("num_detections", ""),
+            detection.get("num_inferred", ""),
+        ] + [proportions.get(name, "") for name in class_names])
+
+    return response
 
 
 @login_required
@@ -132,37 +174,57 @@ def job_configure(request, pk):
                 messages.error(request, "The inference endpoint did not become available in time. Please try again.")
                 return redirect("jobs:detail", pk=job.pk)
 
-            job.status = Job.Status.PROCESSING
-            job.save(update_fields=["status", "updated_at"])
-
-            any_succeeded = False
-            for img in job.images.all():
-                img.status = JobImage.Status.PROCESSING
-                img.save(update_fields=["status"])
-                try:
-                    img.image.open("rb")
-                    image_bytes = img.image.read()
-                    img.image.close()
-                    img.result = run_full_pipeline(
-                        image_bytes,
-                        img_name=img.original_filename,
-                        conf=job.conf,
-                        marker_type=job.marker_type,
-                    )
-                    img.status = JobImage.Status.COMPLETED
-                    any_succeeded = True
-                except RunPodError as e:
-                    img.result = {"error": str(e)}
-                    img.status = JobImage.Status.FAILED
-                img.save(update_fields=["status", "result"])
-
-            job.status = Job.Status.COMPLETED if any_succeeded else Job.Status.FAILED
-            job.save(update_fields=["status", "updated_at"])
-
+            # Set here (not inside the generator below) so SessionMiddleware saves it —
+            # once streaming starts, the response has already left process_response.
             messages.success(request, f'Job "{job.name}" submitted with {job.image_count} image(s).')
-            return redirect("jobs:detail", pk=job.pk)
+
+            def event_stream():
+                job.status = Job.Status.PROCESSING
+                job.save(update_fields=["status", "updated_at"])
+
+                images = list(job.images.all())
+                any_succeeded = False
+                for i, img in enumerate(images, start=1):
+                    yield f"event: progress\ndata: {json.dumps({'current': i, 'total': len(images), 'filename': img.original_filename})}\n\n"
+
+                    img.status = JobImage.Status.PROCESSING
+                    img.save(update_fields=["status"])
+                    try:
+                        img.image.open("rb")
+                        image_bytes = img.image.read()
+                        img.image.close()
+                        img.result = run_full_pipeline(
+                            image_bytes,
+                            img_name=img.original_filename,
+                            conf=job.conf,
+                            marker_type=job.marker_type,
+                        )
+                        img.status = JobImage.Status.COMPLETED
+                        any_succeeded = True
+                    except RunPodError as e:
+                        img.result = {"error": str(e)}
+                        img.status = JobImage.Status.FAILED
+                    img.save(update_fields=["status", "result"])
+
+                job.status = Job.Status.COMPLETED if any_succeeded else Job.Status.FAILED
+                job.save(update_fields=["status", "updated_at"])
+
+                yield f"event: done\ndata: {json.dumps({'redirect': reverse('jobs:detail', args=[job.pk])})}\n\n"
+
+            response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+            response["Cache-Control"] = "no-cache"
+            response["X-Accel-Buffering"] = "no"
+            return response
 
     return render(request, "jobs/configure.html", {"form": form, "job": job})
+
+
+@login_required
+def job_image_overlay(request, pk):
+    img = get_object_or_404(JobImage, pk=pk, job__user=request.user)
+    if img.status != JobImage.Status.COMPLETED or not img.result:
+        raise Http404
+    return HttpResponse(build_overlay_png(img), content_type="image/png")
 
 
 @login_required

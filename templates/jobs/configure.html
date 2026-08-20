@@ -61,6 +61,18 @@
       </div>
     </div>
 
+    {# Processing progress #}
+    <div x-show="imagesTotal > 0" x-transition>
+      <div class="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400 mb-1.5">
+        <span x-text="'Processing ' + imagesDone + ' of ' + imagesTotal + ' — ' + currentImageName"></span>
+        <span x-text="Math.round((imagesDone / imagesTotal) * 100) + '%'"></span>
+      </div>
+      <div class="h-2 rounded-full bg-gray-100 dark:bg-slate-700 overflow-hidden">
+        <div class="h-full bg-brand-500 transition-all duration-150"
+             :style="`width: ${Math.round((imagesDone / imagesTotal) * 100)}%`"></div>
+      </div>
+    </div>
+
     {# Actions #}
     <div class="flex items-center justify-end gap-3">
       <span x-show="warmingUp" x-transition
@@ -98,30 +110,80 @@ function configureJob() {
     conf: {{ form.conf.value|default:0.85 }},
     submitting: false,
     warmingUp: false,
+    imagesDone: 0,
+    imagesTotal: 0,
+    currentImageName: '',
 
     async handleSubmit() {
       this.submitting = true;
       this.warmingUp = true;
+      const csrfToken = document.querySelector('#configureForm [name=csrfmiddlewaretoken]').value;
+
       try {
-        const csrfToken = document.querySelector('#configureForm [name=csrfmiddlewaretoken]').value;
-        const response = await fetch('{% url "jobs:warmup" pk=job.pk %}', {
+        const warmupResp = await fetch('{% url "jobs:warmup" pk=job.pk %}', {
           method: 'POST',
           headers: { 'X-CSRFToken': csrfToken },
         });
-        const data = await response.json();
+        const warmupData = await warmupResp.json();
         this.warmingUp = false;
 
-        if (!data.ready) {
+        if (!warmupData.ready) {
           alert('The inference endpoint did not respond in time. Please try again.');
           this.submitting = false;
           return;
         }
 
-        document.getElementById('configureForm').submit();
+        const form = document.getElementById('configureForm');
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'X-CSRFToken': csrfToken },
+        });
+
+        const contentType = response.headers.get('Content-Type') || '';
+        if (!response.body || !contentType.includes('text/event-stream')) {
+          // Not a stream (e.g. validation failed server-side) — just follow wherever it landed.
+          window.location.href = response.url;
+          return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          let boundary;
+          while ((boundary = buffer.indexOf('\n\n')) !== -1) {
+            const rawEvent = buffer.slice(0, boundary);
+            buffer = buffer.slice(boundary + 2);
+
+            let eventType = 'message';
+            let dataLine = '';
+            for (const line of rawEvent.split('\n')) {
+              if (line.startsWith('event:')) eventType = line.slice(6).trim();
+              if (line.startsWith('data:')) dataLine = line.slice(5).trim();
+            }
+            if (!dataLine) continue;
+            const payload = JSON.parse(dataLine);
+
+            if (eventType === 'progress') {
+              this.imagesTotal = payload.total;
+              this.imagesDone = payload.current - 1;
+              this.currentImageName = payload.filename;
+            } else if (eventType === 'done') {
+              window.location.href = payload.redirect;
+              return;
+            }
+          }
+        }
       } catch (e) {
         this.warmingUp = false;
         this.submitting = false;
-        alert('Something went wrong warming up the endpoint. Please try again.');
+        alert('Something went wrong submitting the job. Please try again.');
       }
     }
   }
