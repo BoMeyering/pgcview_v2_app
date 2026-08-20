@@ -5,6 +5,7 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
 from django.db.models import Count, Q
 from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -17,6 +18,9 @@ from .models import Job, JobImage
 from .overlay import CLASS_COLORS_HEX, build_overlay_png
 from .runpod_client import RunPodError, run_full_pipeline, wait_for_ready
 from .utils import download_drive_image, get_google_access_token
+
+THUMBNAIL_MAX_DIM = 320
+OVERLAY_CACHE_CONTROL = "private, max-age=86400, immutable"
 
 
 @login_required
@@ -201,10 +205,15 @@ def job_configure(request, pk):
                         )
                         img.status = JobImage.Status.COMPLETED
                         any_succeeded = True
+                        try:
+                            thumb_bytes = build_overlay_png(img, max_dim=THUMBNAIL_MAX_DIM)
+                            img.overlay_thumbnail.save(f"{img.pk}.png", ContentFile(thumb_bytes), save=False)
+                        except Exception:
+                            pass  # Thumbnail is a nice-to-have; the detail page falls back to on-demand rendering.
                     except RunPodError as e:
                         img.result = {"error": str(e)}
                         img.status = JobImage.Status.FAILED
-                    img.save(update_fields=["status", "result"])
+                    img.save(update_fields=["status", "result", "overlay_thumbnail"])
 
                 job.status = Job.Status.COMPLETED if any_succeeded else Job.Status.FAILED
                 job.save(update_fields=["status", "updated_at"])
@@ -224,7 +233,21 @@ def job_image_overlay(request, pk):
     img = get_object_or_404(JobImage, pk=pk, job__user=request.user)
     if img.status != JobImage.Status.COMPLETED or not img.result:
         raise Http404
-    return HttpResponse(build_overlay_png(img), content_type="image/png")
+    response = HttpResponse(build_overlay_png(img), content_type="image/png")
+    response["Cache-Control"] = OVERLAY_CACHE_CONTROL
+    return response
+
+
+@login_required
+def job_image_overlay_thumb(request, pk):
+    """Fallback for images completed before overlay_thumbnail existed. New images get their
+    thumbnail pre-made in job_configure and are served straight from storage instead of hitting this."""
+    img = get_object_or_404(JobImage, pk=pk, job__user=request.user)
+    if img.status != JobImage.Status.COMPLETED or not img.result:
+        raise Http404
+    response = HttpResponse(build_overlay_png(img, max_dim=THUMBNAIL_MAX_DIM), content_type="image/png")
+    response["Cache-Control"] = OVERLAY_CACHE_CONTROL
+    return response
 
 
 @login_required

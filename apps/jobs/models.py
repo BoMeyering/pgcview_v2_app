@@ -86,6 +86,10 @@ def _job_image_path(instance, filename):
     return f"tmp/{instance.job_id}/{filename}"
 
 
+def _job_thumb_path(instance, filename):
+    return f"tmp/{instance.job_id}/thumbs/{filename}"
+
+
 class JobImage(models.Model):
     class Status(models.TextChoices):
         PENDING = "pending", "Pending"
@@ -95,6 +99,7 @@ class JobImage(models.Model):
 
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to=_job_image_path, blank=True)
+    overlay_thumbnail = models.ImageField(upload_to=_job_thumb_path, blank=True)
     original_filename = models.CharField(max_length=255)
     drive_file_id = models.CharField(max_length=255, blank=True)
     drive_thumbnail_url = models.URLField(blank=True)

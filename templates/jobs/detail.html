@@ -45,6 +45,20 @@
 </div>
 {% endblock %}
 
+{% block extra_head %}
+<style>
+  .grass-blade {
+    transform-box: fill-box;
+    transform-origin: bottom center;
+    animation: grass-grow 1.6s ease-in-out infinite;
+  }
+  @keyframes grass-grow {
+    0%, 100% { transform: scaleY(0.15); opacity: 0.45; }
+    50% { transform: scaleY(1); opacity: 1; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 {{ overlay_images|json_script:"overlay-images-data" }}
 {{ class_colors|json_script:"class-colors-data" }}
@@ -122,18 +136,19 @@
     </div>
 
     {% elif job.images.all %}
-    <div class="flex gap-3 overflow-x-auto p-5">
+    <div class="flex flex-wrap gap-3 p-5 max-h-[26rem] overflow-y-auto">
       {% for img in job.images.all %}
       <div class="group relative rounded-xl overflow-hidden border border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-700 w-28 h-28 flex-shrink-0{% if img.status == 'completed' %} cursor-pointer{% endif %}"
            {% if img.status == 'completed' %}@click="show({{ img.pk }})"{% endif %}>
         {% if img.status == 'completed' %}
-          <img src="{% url 'jobs:image_overlay' pk=img.pk %}" alt="{{ img.original_filename }}"
+          <img src="{% if img.overlay_thumbnail %}{{ img.overlay_thumbnail.url }}{% else %}{% url 'jobs:image_overlay_thumb' pk=img.pk %}{% endif %}"
+               alt="{{ img.original_filename }}" loading="lazy" decoding="async"
                class="w-full h-full object-cover group-hover:opacity-90 transition" />
         {% elif img.image %}
-          <img src="{{ img.image.url }}" alt="{{ img.original_filename }}"
+          <img src="{{ img.image.url }}" alt="{{ img.original_filename }}" loading="lazy" decoding="async"
                class="w-full h-full object-cover group-hover:opacity-90 transition" />
         {% elif img.drive_thumbnail_url %}
-          <img src="{{ img.drive_thumbnail_url }}" alt="{{ img.original_filename }}"
+          <img src="{{ img.drive_thumbnail_url }}" alt="{{ img.original_filename }}" loading="lazy" decoding="async"
                class="w-full h-full object-cover group-hover:opacity-90 transition" />
         {% else %}
           <div class="flex items-center justify-center w-full h-full">
@@ -275,7 +290,30 @@
 
       {# Image + caption #}
       <div class="flex flex-col items-center min-w-0">
-        <img :src="current.url" :alt="current.name" class="max-h-[70vh] max-w-full rounded-lg object-contain" />
+        <div class="relative flex items-center justify-center min-w-[280px] max-w-full" style="height: 70vh;">
+          <img :src="open ? current.url : ''" :alt="current.name"
+               @load="loading = false" @error="loading = false"
+               class="max-h-full max-w-full rounded-lg object-contain transition-opacity duration-200"
+               :class="loading ? 'opacity-0' : 'opacity-100'" />
+          <div x-show="loading" x-transition.opacity
+               class="absolute inset-0 flex items-center justify-center">
+            <svg viewBox="0 0 100 100" class="w-20 h-24" aria-label="Loading image">
+              <defs>
+                <linearGradient id="grassGrad" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0%" stop-color="#14532d" />
+                  <stop offset="100%" stop-color="#4ade80" />
+                </linearGradient>
+              </defs>
+              <g fill="url(#grassGrad)">
+                <path class="grass-blade" style="animation-delay:.1s"  d="M38,92 Q33.4,72.8 16,60 Q37,72.8 42,92 Z" />
+                <path class="grass-blade" style="animation-delay:.25s" d="M43.8,92 Q42.4,42.8 38,10 Q46.4,42.8 48.2,92 Z" />
+                <path class="grass-blade" style="animation-delay:.4s"  d="M48.6,92 Q50.6,39.8 60,5 Q55,39.8 53.4,92 Z" />
+                <path class="grass-blade" style="animation-delay:.2s"  d="M54,92 Q57.8,53.6 74,28 Q61.4,53.6 58,92 Z" />
+                <path class="grass-blade" style="animation-delay:0s"   d="M47.3,92 Q46.9,81.8 46,75 Q49.9,81.8 50.7,92 Z" />
+              </g>
+            </svg>
+          </div>
+        </div>
         <div class="mt-4 text-center">
           <p class="text-sm font-medium text-white" x-text="current.name"></p>
           <p class="text-xs text-white/60 mt-1" x-text="(index + 1) + ' of ' + images.length"></p>
@@ -295,16 +333,18 @@ function lightbox() {
     images: JSON.parse(document.getElementById('overlay-images-data').textContent),
     classColors: JSON.parse(document.getElementById('class-colors-data').textContent),
     open: false,
+    loading: false,
     index: 0,
     show(id) {
       const i = this.images.findIndex(img => img.id === id);
       if (i === -1) return;
+      this.loading = true;
       this.index = i;
       this.open = true;
     },
     close() { this.open = false; },
-    next() { this.index = (this.index + 1) % this.images.length; },
-    prev() { this.index = (this.index - 1 + this.images.length) % this.images.length; },
+    next() { this.loading = true; this.index = (this.index + 1) % this.images.length; },
+    prev() { this.loading = true; this.index = (this.index - 1 + this.images.length) % this.images.length; },
     get current() { return this.images[this.index] || {}; },
     get barSegments() {
       const props = this.current.class_proportions || {};

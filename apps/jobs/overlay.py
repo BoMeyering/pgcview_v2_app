@@ -48,11 +48,20 @@ def _ordered_roi_points(roi_bboxes, sx, sy):
     return sorted(midpoints, key=lambda p: math.atan2(p[1] - cy, p[0] - cx))
 
 
-def build_overlay_png(job_image):
-    """Render the segmentation class map + ROI polygon over the original image. Returns PNG bytes."""
+def build_overlay_png(job_image, max_dim=None):
+    """Render the segmentation class map + ROI polygon over the original image. Returns PNG bytes.
+
+    If max_dim is given, the original is downscaled to fit within it first, so all
+    downstream compositing runs on the smaller image (cheap thumbnails vs. full-res).
+    """
     result = job_image.result
     original = Image.open(job_image.image.path).convert("RGB")
     orig_w, orig_h = original.size
+
+    if max_dim and max(orig_w, orig_h) > max_dim:
+        scale = max_dim / max(orig_w, orig_h)
+        orig_w, orig_h = round(orig_w * scale), round(orig_h * scale)
+        original = original.resize((orig_w, orig_h), Image.Resampling.LANCZOS)
 
     class_map_png = base64.b64decode(result["segmentation"]["output_map"])
     class_map = Image.open(io.BytesIO(class_map_png)).convert("L")

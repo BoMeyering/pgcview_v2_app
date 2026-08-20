@@ -10,6 +10,11 @@ SECRET_KEY = env("SECRET_KEY")
 DEBUG = env.bool("DEBUG", default=False)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
+# Behind Caddy's reverse proxy, requests arrive over plain HTTP with X-Forwarded-Proto
+# set — without this, Django thinks every request is insecure (breaks CSRF/cookies).
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+
 DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
