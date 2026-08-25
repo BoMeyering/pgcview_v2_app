@@ -1,6 +1,8 @@
 import csv
 import json
 import shutil
+import zipfile
+from io import BytesIO
 from pathlib import Path
 from django.conf import settings
 from django.contrib import messages
@@ -20,7 +22,19 @@ from .runpod_client import RunPodError, run_full_pipeline, wait_for_ready
 from .utils import download_drive_image, get_google_access_token
 
 THUMBNAIL_MAX_DIM = 320
+MODAL_MAX_DIM = 1600
 OVERLAY_CACHE_CONTROL = "private, max-age=86400, immutable"
+
+
+def _parse_ids_param(request):
+    """Returns a list of ints from a comma-separated ?ids= param, or None if absent/invalid."""
+    raw = request.GET.get("ids")
+    if not raw:
+        return None
+    try:
+        return [int(x) for x in raw.split(",") if x]
+    except ValueError:
+        return None
 
 
 @login_required
@@ -65,9 +79,11 @@ def job_detail(request, pk):
         }
         for img in job.images.filter(status=JobImage.Status.COMPLETED)
     ]
+    all_image_ids = list(job.images.values_list("pk", flat=True))
     return render(request, "jobs/detail.html", {
         "job": job,
         "overlay_images": overlay_images,
+        "all_image_ids": all_image_ids,
         "class_colors": CLASS_COLORS_HEX,
     })
 
@@ -77,13 +93,18 @@ def job_detections_csv(request, pk):
     job = get_object_or_404(Job, pk=pk, user=request.user)
     class_names = list(CLASS_COLORS_HEX.keys())
 
+    images = job.images.all()
+    ids = _parse_ids_param(request)
+    if ids is not None:
+        images = images.filter(pk__in=ids)
+
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = f'attachment; filename="{slugify(job.name)}-detections.csv"'
 
     writer = csv.writer(response)
     writer.writerow(["image_name", "roi_type", "markers_detected", "markers_imputed"] + class_names)
 
-    for img in job.images.all():
+    for img in images:
         result = img.result or {}
         detection = result.get("detection") or {}
         proportions = result.get("segmentation", {}).get("class_proportions", {})
@@ -233,8 +254,43 @@ def job_image_overlay(request, pk):
     img = get_object_or_404(JobImage, pk=pk, job__user=request.user)
     if img.status != JobImage.Status.COMPLETED or not img.result:
         raise Http404
-    response = HttpResponse(build_overlay_png(img), content_type="image/png")
+    response = HttpResponse(build_overlay_png(img, max_dim=MODAL_MAX_DIM), content_type="image/png")
     response["Cache-Control"] = OVERLAY_CACHE_CONTROL
+    return response
+
+
+@login_required
+def job_images_zip(request, pk):
+    """Zips the full-resolution overlay images for the given (or all) completed images."""
+    job = get_object_or_404(Job, pk=pk, user=request.user)
+    images = job.images.filter(status=JobImage.Status.COMPLETED)
+    ids = _parse_ids_param(request)
+    if ids is not None:
+        images = images.filter(pk__in=ids)
+
+    buf = BytesIO()
+    used_names = set()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for img in images:
+            if not img.result:
+                continue
+            try:
+                png_bytes = build_overlay_png(img)
+            except Exception:
+                continue
+            stem = Path(img.original_filename).stem or f"image_{img.pk}"
+            name, n = f"{stem}_overlay.png", 1
+            while name in used_names:
+                name = f"{stem}_overlay_{n}.png"
+                n += 1
+            used_names.add(name)
+            zf.writestr(name, png_bytes)
+
+    if not used_names:
+        raise Http404
+
+    response = HttpResponse(buf.getvalue(), content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="{slugify(job.name)}-overlays.zip"'
     return response
 
 

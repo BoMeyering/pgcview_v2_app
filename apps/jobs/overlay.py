@@ -2,7 +2,7 @@ import base64
 import io
 import math
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 from .runpod_client import INFERENCE_SIZE
 
@@ -31,6 +31,11 @@ CLASS_COLORS_HEX = {name: "#%02x%02x%02x" % rgb for name, rgb in CLASS_INFO}
 
 ROI_COLOR = (255, 255, 0)
 ALPHA = 0.5
+# Everything outside the ROI is excluded from class_proportions — desaturate and
+# darken it so it's visually obvious only the interior counts.
+OUTSIDE_ROI_SATURATION = 0.15
+OUTSIDE_ROI_BRIGHTNESS = 0.6
+ROI_MASK_FEATHER = 3
 
 
 def _flat_palette():
@@ -82,6 +87,15 @@ def build_overlay_png(job_image, max_dim=None):
         sx = orig_w / INFERENCE_SIZE
         sy = orig_h / INFERENCE_SIZE
         points = _ordered_roi_points(roi_bboxes, sx, sy)
+
+        dimmed = ImageEnhance.Color(original).enhance(OUTSIDE_ROI_SATURATION)
+        dimmed = ImageEnhance.Brightness(dimmed).enhance(OUTSIDE_ROI_BRIGHTNESS)
+
+        roi_mask = Image.new("L", overlay.size, 0)
+        ImageDraw.Draw(roi_mask).polygon(points, fill=255)
+        roi_mask = roi_mask.filter(ImageFilter.GaussianBlur(ROI_MASK_FEATHER))
+        overlay = Image.composite(overlay, dimmed, roi_mask)
+
         draw = ImageDraw.Draw(overlay)
         draw.polygon(points, outline=ROI_COLOR, width=3)
 

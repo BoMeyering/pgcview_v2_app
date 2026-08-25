@@ -11,6 +11,7 @@ urlpatterns = [
     path("jobs/history/", views.job_history, name="history"),
     path("jobs/<uuid:pk>/", views.job_detail, name="detail"),
     path("jobs/<uuid:pk>/detections.csv", views.job_detections_csv, name="detections_csv"),
+    path("jobs/<uuid:pk>/images.zip", views.job_images_zip, name="images_zip"),
     path("jobs/images/<int:pk>/overlay.png", views.job_image_overlay, name="image_overlay"),
     path("jobs/images/<int:pk>/overlay-thumb.png", views.job_image_overlay_thumb, name="image_overlay_thumb"),
     path("jobs/<uuid:pk>/stop/", views.stop_job, name="stop"),
