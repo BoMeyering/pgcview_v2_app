@@ -3,7 +3,7 @@
 {% block title %}{{ job.name }} — PGCView{% endblock %}
 {% block page_title %}{{ job.name }}{% endblock %}
 {% block page_subtitle %}
-  <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
+  <p class="text-xs text-gray-400 dark:text-forest-500 mt-0.5">
     Submitted {{ job.created_at|timesince }} ago &middot; {{ job.image_count }} image{{ job.image_count|pluralize }}
   </p>
 {% endblock %}
@@ -36,7 +36,7 @@
   </button>
 
   <a href="{% url 'jobs:history' %}"
-     class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors">
+     class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-forest-400 hover:text-gray-700 dark:hover:text-forest-200 transition-colors">
     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
     </svg>
@@ -66,55 +66,55 @@
 <div class="space-y-5" x-data="lightbox()">
 
   {# ── Job metadata ────────────────────────────────────────────────────── #}
-  <div class="rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-5">
+  <div class="rounded-2xl bg-white dark:bg-forest-800 border border-gray-100 dark:border-forest-700 shadow-sm p-5">
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
 
       <div>
-        <p class="text-xs text-gray-400 dark:text-slate-500 font-medium uppercase tracking-wide mb-1">Status</p>
+        <p class="text-xs text-gray-400 dark:text-forest-500 font-medium uppercase tracking-wide mb-1">Status</p>
         {% include "components/status_badge.html" with status=job.status label=job.get_status_display %}
       </div>
 
       <div>
-        <p class="text-xs text-gray-400 dark:text-slate-500 font-medium uppercase tracking-wide mb-1">Source</p>
-        <p class="text-sm text-gray-900 dark:text-slate-200 font-medium">{{ job.get_source_display }}</p>
+        <p class="text-xs text-gray-400 dark:text-forest-500 font-medium uppercase tracking-wide mb-1">Source</p>
+        <p class="text-sm text-gray-900 dark:text-forest-200 font-medium">{{ job.get_source_display }}</p>
       </div>
 
       <div>
-        <p class="text-xs text-gray-400 dark:text-slate-500 font-medium uppercase tracking-wide mb-1">Images</p>
-        <p class="text-sm text-gray-900 dark:text-slate-200 font-medium">{{ job.image_count }}</p>
+        <p class="text-xs text-gray-400 dark:text-forest-500 font-medium uppercase tracking-wide mb-1">Images</p>
+        <p class="text-sm text-gray-900 dark:text-forest-200 font-medium">{{ job.image_count }}</p>
       </div>
 
       <div>
-        <p class="text-xs text-gray-400 dark:text-slate-500 font-medium uppercase tracking-wide mb-1">Submitted</p>
-        <p class="text-sm text-gray-900 dark:text-slate-200 font-medium">{{ job.created_at|date:"M j, Y H:i" }} UTC</p>
+        <p class="text-xs text-gray-400 dark:text-forest-500 font-medium uppercase tracking-wide mb-1">Submitted</p>
+        <p class="text-sm text-gray-900 dark:text-forest-200 font-medium">{{ job.created_at|date:"M j, Y H:i" }} UTC</p>
       </div>
 
       {% if job.completed_at %}
       <div>
-        <p class="text-xs text-gray-400 dark:text-slate-500 font-medium uppercase tracking-wide mb-1">Finished</p>
-        <p class="text-sm text-gray-900 dark:text-slate-200 font-medium">{{ job.completed_at|date:"M j, Y H:i" }} UTC</p>
+        <p class="text-xs text-gray-400 dark:text-forest-500 font-medium uppercase tracking-wide mb-1">Finished</p>
+        <p class="text-sm text-gray-900 dark:text-forest-200 font-medium">{{ job.completed_at|date:"M j, Y H:i" }} UTC</p>
       </div>
       {% endif %}
 
     </div>
 
     {% if job.description %}
-    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700">
-      <p class="text-xs text-gray-400 dark:text-slate-500 font-medium uppercase tracking-wide mb-1">Description</p>
-      <p class="text-sm text-gray-700 dark:text-slate-300">{{ job.description }}</p>
+    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-forest-700">
+      <p class="text-xs text-gray-400 dark:text-forest-500 font-medium uppercase tracking-wide mb-1">Description</p>
+      <p class="text-sm text-gray-700 dark:text-forest-300">{{ job.description }}</p>
     </div>
     {% endif %}
   </div>
 
   {# ── Images ──────────────────────────────────────────────────────────── #}
-  <div class="rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden">
-    <div class="px-5 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100">
+  <div class="rounded-2xl bg-white dark:bg-forest-800 border border-gray-100 dark:border-forest-700 shadow-sm overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100 dark:border-forest-700 flex items-center justify-between">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-forest-100">
         Images
-        <span class="ml-1 text-xs text-gray-400 dark:text-slate-500 font-normal">({{ job.image_count }})</span>
+        <span class="ml-1 text-xs text-gray-400 dark:text-forest-500 font-normal">({{ job.image_count }})</span>
       </h3>
       {% if job.images_purged %}
-      <span class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-slate-700 px-2.5 py-0.5 text-xs font-medium text-gray-500 dark:text-slate-400">
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-forest-700 px-2.5 py-0.5 text-xs font-medium text-gray-500 dark:text-forest-400">
         <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916" />
         </svg>
@@ -124,25 +124,25 @@
     </div>
 
     {% if not job.images_purged and job.images.all %}
-    <div class="px-5 py-2.5 border-b border-gray-100 dark:border-slate-700 flex flex-wrap items-center gap-3 bg-gray-50/60 dark:bg-slate-900/20">
-      <label class="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-slate-300 cursor-pointer select-none">
+    <div class="px-5 py-2.5 border-b border-gray-100 dark:border-forest-700 flex flex-wrap items-center gap-3 bg-gray-50/60 dark:bg-forest-900/20">
+      <label class="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-forest-300 cursor-pointer select-none">
         <input type="checkbox" :checked="allSelected" @change="allSelected ? deselectAll() : selectAll()"
                class="w-4 h-4 rounded accent-brand-600 cursor-pointer" />
         Select all
       </label>
-      <span class="text-xs text-gray-400 dark:text-slate-500" x-text="selectedCount + ' of ' + totalCount + ' selected'"></span>
+      <span class="text-xs text-gray-400 dark:text-forest-500" x-text="selectedCount + ' of ' + totalCount + ' selected'"></span>
     </div>
     {% endif %}
 
     {% if job.images_purged %}
     <div class="flex flex-col items-center justify-center py-10 text-center px-6">
-      <div class="flex items-center justify-center w-11 h-11 rounded-full bg-gray-100 dark:bg-slate-700 mb-3">
-        <svg class="w-5 h-5 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <div class="flex items-center justify-center w-11 h-11 rounded-full bg-gray-100 dark:bg-forest-700 mb-3">
+        <svg class="w-5 h-5 text-gray-400 dark:text-forest-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
-      <p class="text-sm font-medium text-gray-700 dark:text-slate-300">Images have been removed</p>
-      <p class="text-xs text-gray-400 dark:text-slate-500 mt-1 max-w-xs">
+      <p class="text-sm font-medium text-gray-700 dark:text-forest-300">Images have been removed</p>
+      <p class="text-xs text-gray-400 dark:text-forest-500 mt-1 max-w-xs">
         Image files are automatically deleted 24 hours after a job finishes. The job record and any results are retained.
       </p>
     </div>
@@ -150,7 +150,7 @@
     {% elif job.images.all %}
     <div class="flex flex-wrap gap-3 p-5 max-h-[26rem] overflow-y-auto">
       {% for img in job.images.all %}
-      <div class="group relative rounded-xl overflow-hidden border border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-700 w-28 h-28 flex-shrink-0{% if img.status == 'completed' %} cursor-pointer{% endif %}"
+      <div class="group relative rounded-xl overflow-hidden border border-gray-100 dark:border-forest-700 bg-gray-50 dark:bg-forest-700 w-28 h-28 flex-shrink-0{% if img.status == 'completed' %} cursor-pointer{% endif %}"
            {% if img.status == 'completed' %}@click="show({{ img.pk }})"{% endif %}>
         <label class="absolute top-1.5 left-1.5 z-10 flex items-center justify-center w-5 h-5 rounded bg-black/30 backdrop-blur-sm" @click.stop>
           <input type="checkbox" :checked="selected.has({{ img.pk }})" @change="toggle({{ img.pk }})"
@@ -160,6 +160,9 @@
           <img src="{% if img.overlay_thumbnail %}{{ img.overlay_thumbnail.url }}{% else %}{% url 'jobs:image_overlay_thumb' pk=img.pk %}{% endif %}"
                alt="{{ img.original_filename }}" loading="lazy" decoding="async"
                class="w-full h-full object-cover group-hover:opacity-90 transition" />
+        {% elif img.thumbnail %}
+          <img src="{{ img.thumbnail.url }}" alt="{{ img.original_filename }}" loading="lazy" decoding="async"
+               class="w-full h-full object-cover group-hover:opacity-90 transition" />
         {% elif img.image %}
           <img src="{{ img.image.url }}" alt="{{ img.original_filename }}" loading="lazy" decoding="async"
                class="w-full h-full object-cover group-hover:opacity-90 transition" />
@@ -168,7 +171,7 @@
                class="w-full h-full object-cover group-hover:opacity-90 transition" />
         {% else %}
           <div class="flex items-center justify-center w-full h-full">
-            <svg class="w-8 h-8 text-gray-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+            <svg class="w-8 h-8 text-gray-300 dark:text-forest-600" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909" />
             </svg>
@@ -190,14 +193,14 @@
 
     {% else %}
     <div class="py-10 text-center">
-      <p class="text-sm text-gray-400 dark:text-slate-500">No images attached to this job.</p>
+      <p class="text-sm text-gray-400 dark:text-forest-500">No images attached to this job.</p>
     </div>
     {% endif %}
   </div>
 
   {# ── Results ─────────────────────────────────────────────────────────── #}
-  <div class="rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-5">
-    <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100 mb-3">Results</h3>
+  <div class="rounded-2xl bg-white dark:bg-forest-800 border border-gray-100 dark:border-forest-700 shadow-sm p-5">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-forest-100 mb-3">Results</h3>
 
     {% if job.status == 'queued' %}
     <div class="flex items-center gap-4 py-2">
@@ -208,10 +211,10 @@
         </svg>
       </div>
       <div class="flex-1">
-        <p class="text-sm text-gray-700 dark:text-slate-300">
+        <p class="text-sm text-gray-700 dark:text-forest-300">
           Images are uploaded but this job hasn't been configured yet.
         </p>
-        <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">Set the detection parameters to start processing.</p>
+        <p class="text-xs text-gray-400 dark:text-forest-500 mt-0.5">Set the detection parameters to start processing.</p>
       </div>
       <a href="{% url 'jobs:configure' pk=job.pk %}"
          class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition">
@@ -221,14 +224,14 @@
 
     {% elif not job.images.all %}
     <div class="flex items-center gap-3 py-2">
-      <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
-        <svg class="w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-forest-700 flex items-center justify-center">
+        <svg class="w-4 h-4 text-gray-400 dark:text-forest-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
-      <p class="text-sm text-gray-500 dark:text-slate-400">
+      <p class="text-sm text-gray-500 dark:text-forest-400">
         Results will appear here once the job is complete.
-        Current status: <strong class="text-gray-700 dark:text-slate-300">{{ job.get_status_display }}</strong>.
+        Current status: <strong class="text-gray-700 dark:text-forest-300">{{ job.get_status_display }}</strong>.
       </p>
     </div>
 
@@ -240,15 +243,15 @@
         </svg>
       </div>
       <div class="flex-1">
-        <p class="text-sm text-gray-700 dark:text-slate-300">
+        <p class="text-sm text-gray-700 dark:text-forest-300">
           Export results for <span x-text="selectedCount"></span> selected image<span x-show="selectedCount !== 1">s</span>.
         </p>
-        <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">CSV: ROI type, marker counts, and class proportions. ZIP: full-resolution overlay images.</p>
+        <p class="text-xs text-gray-400 dark:text-forest-500 mt-0.5">CSV: ROI type, marker counts, and class proportions. ZIP: full-resolution overlay images.</p>
       </div>
       <div class="flex-shrink-0 flex items-center gap-2">
         <a :href="selectedCount ? csvHref : '#'" @click="!selectedCount && $event.preventDefault()"
            :class="selectedCount ? '' : 'opacity-40 cursor-not-allowed pointer-events-none'"
-           class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 transition">
+           class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-forest-600 px-4 py-2 text-sm font-semibold text-gray-700 dark:text-forest-200 hover:bg-gray-50 dark:hover:bg-forest-700 transition">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
           </svg>

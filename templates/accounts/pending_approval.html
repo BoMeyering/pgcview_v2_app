@@ -11,9 +11,9 @@
     </svg>
   </div>
 
-  <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">Account pending approval</h2>
-  <p class="mt-2 text-sm text-gray-500 dark:text-slate-400">
-    Thanks for signing in, <strong class="text-gray-700 dark:text-slate-300">{{ user.first_name|default:user.email }}</strong>.<br />
+  <h2 class="text-xl font-semibold text-gray-900 dark:text-forest-100">Account pending approval</h2>
+  <p class="mt-2 text-sm text-gray-500 dark:text-forest-400">
+    Thanks for signing in, <strong class="text-gray-700 dark:text-forest-300">{{ user.first_name|default:user.email }}</strong>.<br />
     Your account has been created and is waiting for an administrator to grant access.
   </p>
 
@@ -26,9 +26,9 @@
     </ul>
   </div>
 
-  <div class="mt-6 border-t border-gray-100 dark:border-slate-700 pt-5">
+  <div class="mt-6 border-t border-gray-100 dark:border-forest-700 pt-5">
     <a href="{% url 'account_logout' %}"
-       class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors">
+       class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-forest-400 hover:text-gray-700 dark:hover:text-forest-200 transition-colors">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round"
           d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />

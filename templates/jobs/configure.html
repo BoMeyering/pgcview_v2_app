@@ -3,7 +3,7 @@
 {% block title %}Configure — {{ job.name }} — PGCView{% endblock %}
 {% block page_title %}Configure Job{% endblock %}
 {% block page_subtitle %}
-  <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
+  <p class="text-xs text-gray-400 dark:text-forest-500 mt-0.5">
     {{ job.name }} &middot; {{ job.image_count }} image{{ job.image_count|pluralize }} uploaded
   </p>
 {% endblock %}
@@ -22,15 +22,20 @@
   <div class="space-y-5">
 
     {# ── Uploaded images summary ────────────────────────────────────────── #}
-    <div class="rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-5">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100 mb-4">Uploaded Images</h3>
-      <div class="grid grid-cols-4 gap-3 sm:grid-cols-6">
+    <div class="rounded-2xl bg-white dark:bg-forest-800 border border-gray-100 dark:border-forest-700 shadow-sm p-5">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-forest-100 mb-4">Uploaded Images</h3>
+      <div class="flex flex-wrap gap-3 max-h-[26rem] overflow-y-auto pr-1">
         {% for img in job.images.all %}
-        <div class="rounded-xl overflow-hidden border border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-700 aspect-square">
-          {% if img.image %}
-            <img src="{{ img.image.url }}" alt="{{ img.original_filename }}" class="w-full h-full object-cover" />
+        <div class="rounded-xl overflow-hidden border border-gray-100 dark:border-forest-700 bg-gray-50 dark:bg-forest-700 w-28 h-28 flex-shrink-0">
+          {% if img.thumbnail %}
+            <img src="{{ img.thumbnail.url }}" alt="{{ img.original_filename }}" loading="lazy" decoding="async"
+                 class="w-full h-full object-cover" />
+          {% elif img.image %}
+            <img src="{{ img.image.url }}" alt="{{ img.original_filename }}" loading="lazy" decoding="async"
+                 class="w-full h-full object-cover" />
           {% elif img.drive_thumbnail_url %}
-            <img src="{{ img.drive_thumbnail_url }}" alt="{{ img.original_filename }}" class="w-full h-full object-cover" />
+            <img src="{{ img.drive_thumbnail_url }}" alt="{{ img.original_filename }}" loading="lazy" decoding="async"
+                 class="w-full h-full object-cover" />
           {% endif %}
         </div>
         {% endfor %}
@@ -38,36 +43,36 @@
     </div>
 
     {# ── Configure card ─────────────────────────────────────────────────── #}
-    <div class="rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-5">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100 mb-4">Configure</h3>
+    <div class="rounded-2xl bg-white dark:bg-forest-800 border border-gray-100 dark:border-forest-700 shadow-sm p-5">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-forest-100 mb-4">Configure</h3>
 
       <div class="space-y-5">
         <div>
-          <label for="{{ form.conf.id_for_label }}" class="flex items-center justify-between text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+          <label for="{{ form.conf.id_for_label }}" class="flex items-center justify-between text-xs font-medium text-gray-700 dark:text-forest-300 mb-1.5">
             <span>Confidence threshold</span>
-            <span class="text-gray-500 dark:text-slate-400" x-text="Math.round(conf * 100) + '%'"></span>
+            <span class="text-gray-500 dark:text-forest-400" x-text="Math.round(conf * 100) + '%'"></span>
           </label>
           {{ form.conf }}
-          <p class="mt-1 text-xs text-gray-400 dark:text-slate-500">Minimum detection confidence used when locating markers or quadrats.</p>
+          <p class="mt-1 text-xs text-gray-400 dark:text-forest-500">Minimum detection confidence used when locating markers or quadrats.</p>
         </div>
 
         <div>
-          <label for="{{ form.marker_type.id_for_label }}" class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+          <label for="{{ form.marker_type.id_for_label }}" class="block text-xs font-medium text-gray-700 dark:text-forest-300 mb-1.5">
             Marker type
           </label>
           {{ form.marker_type }}
-          <p class="mt-1 text-xs text-gray-400 dark:text-slate-500">Auto-detect determines this from the top detections; override it if you know the image type ahead of time.</p>
+          <p class="mt-1 text-xs text-gray-400 dark:text-forest-500">Auto-detect determines this from the top detections; override it if you know the image type ahead of time.</p>
         </div>
       </div>
     </div>
 
     {# Processing progress #}
     <div x-show="imagesTotal > 0" x-transition>
-      <div class="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400 mb-1.5">
+      <div class="flex items-center justify-between text-xs text-gray-500 dark:text-forest-400 mb-1.5">
         <span x-text="'Processing ' + imagesDone + ' of ' + imagesTotal + ' — ' + currentImageName"></span>
         <span x-text="Math.round((imagesDone / imagesTotal) * 100) + '%'"></span>
       </div>
-      <div class="h-2 rounded-full bg-gray-100 dark:bg-slate-700 overflow-hidden">
+      <div class="h-2 rounded-full bg-gray-100 dark:bg-forest-700 overflow-hidden">
         <div class="h-full bg-brand-500 transition-all duration-150"
              :style="`width: ${Math.round((imagesDone / imagesTotal) * 100)}%`"></div>
       </div>

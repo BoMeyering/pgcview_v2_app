@@ -2,7 +2,7 @@ import base64
 import io
 import math
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
 
 from .runpod_client import INFERENCE_SIZE
 
@@ -29,6 +29,8 @@ CLASS_INFO = [
 CLASS_PALETTE = {idx: rgb for idx, (_name, rgb) in enumerate(CLASS_INFO)}
 CLASS_COLORS_HEX = {name: "#%02x%02x%02x" % rgb for name, rgb in CLASS_INFO}
 
+THUMBNAIL_MAX_DIM = 320
+
 ROI_COLOR = (255, 255, 0)
 ALPHA = 0.5
 # Everything outside the ROI is excluded from class_proportions — desaturate and
@@ -51,6 +53,17 @@ def _ordered_roi_points(roi_bboxes, sx, sy):
     cx = sum(p[0] for p in midpoints) / len(midpoints)
     cy = sum(p[1] for p in midpoints) / len(midpoints)
     return sorted(midpoints, key=lambda p: math.atan2(p[1] - cy, p[0] - cx))
+
+
+def build_thumbnail_jpeg(path, max_dim):
+    """Plain (no overlay) resized copy of an uploaded image, for lightweight grid
+    display before inference has run. Returns JPEG bytes."""
+    image = Image.open(path)
+    image = ImageOps.exif_transpose(image)
+    image.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+    buf = io.BytesIO()
+    image.convert("RGB").save(buf, format="JPEG", quality=82)
+    return buf.getvalue()
 
 
 def build_overlay_png(job_image, max_dim=None):

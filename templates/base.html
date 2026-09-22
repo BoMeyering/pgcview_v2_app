@@ -5,13 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}PGCView{% endblock %}</title>
 
-  {# Prevent flash of wrong theme — runs synchronously before render #}
+  {# Prevent flash of wrong theme / sidebar width — runs synchronously before render #}
   <script>
     (function () {
       const stored = localStorage.getItem('pgcview-theme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (stored === 'dark' || (!stored && prefersDark)) {
         document.documentElement.classList.add('dark');
+      }
+      if (localStorage.getItem('pgcview-sidebar-collapsed') === '1') {
+        document.documentElement.classList.add('sidebar-collapsed');
       }
     })();
   </script>
@@ -33,6 +36,17 @@
               700: '#15803d',
               800: '#166534',
               900: '#14532d',
+            },
+            forest: {
+              100: '#e4f1e8',
+              200: '#c6dccd',
+              300: '#a5c0af',
+              400: '#7f9f8c',
+              500: '#5c7a69',
+              600: '#40594c',
+              700: '#2c3f36',
+              800: '#1c2c24',
+              900: '#111d17',
             }
           }
         }
@@ -40,7 +54,7 @@
     }
   </script>
 
-  {# Alpine theme store — toggle must live before Alpine's defer kicks in #}
+  {# Alpine theme / sidebar stores — toggles must live before Alpine's defer kicks in #}
   <script>
     document.addEventListener('alpine:init', () => {
       Alpine.store('theme', {
@@ -51,15 +65,24 @@
           localStorage.setItem('pgcview-theme', this.dark ? 'dark' : 'light');
         }
       });
+      Alpine.store('sidebar', {
+        collapsed: document.documentElement.classList.contains('sidebar-collapsed'),
+        toggle() {
+          this.collapsed = !this.collapsed;
+          document.documentElement.classList.toggle('sidebar-collapsed', this.collapsed);
+          localStorage.setItem('pgcview-sidebar-collapsed', this.collapsed ? '1' : '0');
+        }
+      });
     });
   </script>
 
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   {% load static %}
+  <link rel="icon" type="image/png" href="{% static 'favicon.png' %}">
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
   {% block extra_head %}{% endblock %}
 </head>
-<body class="h-full font-sans antialiased bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
+<body class="h-full font-sans antialiased bg-gray-50 dark:bg-forest-900 transition-colors duration-200">
 
 <div class="flex h-screen overflow-hidden">
 
@@ -70,10 +93,33 @@
   <div class="flex flex-1 flex-col overflow-hidden">
 
     {# ── Top header ───────────────────────────────────────────────────── #}
-    {% include "components/header.html" %}
+    {% comment %}
+    This markup must live directly in base.html, not in an include'd
+    partial — Django's block overrides only resolve through the extends
+    chain, so blocks inside an included template can never be overridden
+    by a page that extends base.html.
+    {% endcomment %}
+    <header x-data class="flex h-[72px] items-center justify-between bg-white dark:bg-forest-800 border-b border-gray-200 dark:border-forest-700/60 px-4 flex-shrink-0 transition-colors duration-200">
+      <div class="flex items-center gap-2">
+        <button @click="$store.sidebar.toggle()"
+                class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-gray-400 dark:text-forest-500 hover:bg-gray-100 dark:hover:bg-forest-700 hover:text-gray-600 dark:hover:text-forest-200 transition-colors"
+                :aria-label="$store.sidebar.collapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+          <svg class="w-5 h-5 transition-transform duration-200" :class="{ 'rotate-180': $store.sidebar.collapsed }" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+          </svg>
+        </button>
+        <div class="pl-2">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-forest-100">{% block page_title %}Dashboard{% endblock %}</h2>
+          {% block page_subtitle %}{% endblock %}
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        {% block header_actions %}{% endblock %}
+      </div>
+    </header>
 
     {# ── Page content ─────────────────────────────────────────────────── #}
-    <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-slate-900 px-6 py-6">
+    <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-forest-900 px-6 py-6">
       {% include "components/messages.html" %}
       {% block content %}{% endblock %}
     </main>
@@ -102,7 +148,7 @@
        @keydown.escape.window="close()"
        @click.self="close()"
        style="display:none;">
-    <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 p-6 shadow-xl">
+    <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-forest-800 border border-gray-100 dark:border-forest-700 p-6 shadow-xl">
       <div class="flex items-start gap-4">
         <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40">
           <svg class="h-5 w-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -111,15 +157,15 @@
           </svg>
         </div>
         <div>
-          <h3 class="text-base font-semibold text-gray-900 dark:text-slate-100">Delete job?</h3>
-          <p class="mt-1 text-sm text-gray-500 dark:text-slate-400">
-            <strong x-text="jobName" class="font-medium text-gray-700 dark:text-slate-300"></strong> and all its images will be permanently removed. This cannot be undone.
+          <h3 class="text-base font-semibold text-gray-900 dark:text-forest-100">Delete job?</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-forest-400">
+            <strong x-text="jobName" class="font-medium text-gray-700 dark:text-forest-300"></strong> and all its images will be permanently removed. This cannot be undone.
           </p>
         </div>
       </div>
       <div class="mt-5 flex justify-end gap-3">
         <button @click="close()" type="button"
-                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition">
+                class="rounded-lg border border-gray-300 dark:border-forest-600 bg-white dark:bg-forest-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-forest-300 hover:bg-gray-50 dark:hover:bg-forest-600 transition">
           Cancel
         </button>
         <form :action="deleteUrl" method="POST" class="inline">
