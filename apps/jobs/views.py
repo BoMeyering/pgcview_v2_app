@@ -310,16 +310,20 @@ def job_images_zip(request, pk):
             if not img.result:
                 continue
             try:
-                png_bytes = build_overlay_png(img)
+                # JPEG, not PNG: these are photos, not line art, so lossy
+                # compression is imperceptible here but shrinks a multi-image
+                # zip drastically (a 2-image PNG zip ran ~42MB; users don't
+                # need pixel-exact overlays for viewing/reporting).
+                jpeg_bytes = build_overlay_png(img, fmt="JPEG", quality=90)
             except Exception:
                 continue
             stem = Path(img.original_filename).stem or f"image_{img.pk}"
-            name, n = f"{stem}_overlay.png", 1
+            name, n = f"{stem}_overlay.jpg", 1
             while name in used_names:
-                name = f"{stem}_overlay_{n}.png"
+                name = f"{stem}_overlay_{n}.jpg"
                 n += 1
             used_names.add(name)
-            zf.writestr(name, png_bytes)
+            zf.writestr(name, jpeg_bytes)
 
     if not used_names:
         raise Http404

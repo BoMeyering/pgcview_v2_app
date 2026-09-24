@@ -66,8 +66,9 @@ def build_thumbnail_jpeg(path, max_dim):
     return buf.getvalue()
 
 
-def build_overlay_png(job_image, max_dim=None):
-    """Render the segmentation class map + ROI polygon over the original image. Returns PNG bytes.
+def build_overlay_png(job_image, max_dim=None, fmt="PNG", quality=90):
+    """Render the segmentation class map + ROI polygon over the original image.
+    Returns encoded image bytes in `fmt` ("PNG" or "JPEG"; `quality` only applies to JPEG).
 
     If max_dim is given, the original is downscaled to fit within it first, so all
     downstream compositing runs on the smaller image (cheap thumbnails vs. full-res).
@@ -113,5 +114,8 @@ def build_overlay_png(job_image, max_dim=None):
         draw.polygon(points, outline=ROI_COLOR, width=3)
 
     buf = io.BytesIO()
-    overlay.save(buf, format="PNG")
+    if fmt == "JPEG":
+        overlay.save(buf, format="JPEG", quality=quality)
+    else:
+        overlay.save(buf, format="PNG")
     return buf.getvalue()
