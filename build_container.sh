@@ -10,7 +10,7 @@
 #   docker push myregistry/pgcview:latest
 set -euo pipefail
 
-IMAGE_NAME="${IMAGE_NAME:-pgcview}"
+IMAGE_NAME="${IMAGE_NAME:-pgcview_app}"
 VERSION="${1:-$(git describe --tags --always --dirty 2>/dev/null || echo "dev")}"
 
 cd "$(dirname "${BASH_SOURCE[0]}")"

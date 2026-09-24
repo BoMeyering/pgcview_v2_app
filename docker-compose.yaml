@@ -3,13 +3,13 @@
 # Build the image first (tags both a version and `latest`):
 #   ./build_container.sh
 #
-# Then bring everything up:
-#   docker compose up -d
+# Then bring everything up (copy .env.docker.example to .env.docker and fill
+# it in first — see that file for why it's .env.docker and not plain .env):
+#   docker compose --env-file .env.docker up -d
 #
-# All app config is passed in as environment variables below, resolved from a
-# `.env` file in this same directory (docker compose loads it automatically
-# for ${VAR} substitution — copy .env.docker.example to .env and fill it in).
-# Anything without a default here is required.
+# All app config is passed in as environment variables below, resolved from
+# ${VAR} references against .env.docker. Anything without a default here is
+# required.
 
 services:
   db:
@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
 
   web:
-    image: "${IMAGE_NAME:-pgcview}:${IMAGE_TAG:-latest}"
+    image: "${IMAGE_NAME:-pgcview_app}:${IMAGE_TAG:-latest}"
     # Runs tini as real PID 1 so both gunicorn's and supercronic's child
     # processes get reaped properly, and signals still forward correctly.
     init: true

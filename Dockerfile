@@ -17,6 +17,7 @@ RUN apt-get update \
 # file instead of installing it into /etc/cron.d.
 ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.2.49/supercronic-linux-amd64 \
     SUPERCRONIC_SHA1SUM=e63c11a9726b775a6a11801e81af4f3fb926aa68
+
 RUN curl -fsSLO "$SUPERCRONIC_URL" \
     && echo "${SUPERCRONIC_SHA1SUM}  supercronic-linux-amd64" | sha1sum -c - \
     && chmod +x supercronic-linux-amd64 \
@@ -35,6 +36,7 @@ RUN SECRET_KEY=build-time-placeholder python manage.py collectstatic --noinput
 
 RUN useradd --create-home --uid 1000 django \
     && chown -R django:django /app
+    
 USER django
 
 EXPOSE 8000
