@@ -2,7 +2,12 @@ from .base import *  # noqa: F401,F403
 
 DEBUG = False
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
+# "localhost" is always allowed in addition to the real domain(s) from env:
+# the container's own HEALTHCHECK curls http://localhost:8000/ from inside
+# the container, which never leaves the Docker network, so it carries none
+# of the external-Host-header-spoofing risk ALLOWED_HOSTS otherwise guards
+# against.
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[]) + ["localhost"]
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 DATABASES = {

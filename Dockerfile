@@ -35,6 +35,14 @@ RUN chmod +x docker/entrypoint.sh
 RUN SECRET_KEY=build-time-placeholder python manage.py collectstatic --noinput
 
 RUN useradd --create-home --uid 1000 django \
+    # media/ is excluded by .dockerignore (real uploads shouldn't be baked
+    # into the image), so it never exists here via COPY. It still needs to
+    # exist as an empty, django-owned dir: compose mounts a named volume over
+    # it at runtime, and Docker only initializes a brand-new volume's
+    # ownership by copying up whatever the image had at that path — if
+    # nothing's there, it defaults to root-owned, which then makes every
+    # write from the (non-root) django user fail silently.
+    && mkdir -p /app/media \
     && chown -R django:django /app
     
 USER django

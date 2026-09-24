@@ -3,6 +3,10 @@ set -e
 
 python manage.py migrate --noinput
 
+# Creates a superuser from DJANGO_SUPERUSER_* env vars on first boot, if set;
+# a no-op on every later restart once that account already exists.
+python manage.py ensure_superuser
+
 # supercronic runs the scheduled cleanup commands (see docker/crontab) for the
 # life of the container; gunicorn serves the app. Backgrounding supercronic and
 # exec'ing gunicorn keeps gunicorn as PID 1, so it gets `docker stop`'s SIGTERM

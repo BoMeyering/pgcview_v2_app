@@ -1,4 +1,5 @@
 import io
+import logging
 from datetime import timedelta
 
 from django.conf import settings
@@ -14,6 +15,8 @@ from .overlay import THUMBNAIL_MAX_DIM, build_thumbnail_jpeg
 
 # Refresh a bit before the real expiry so a token doesn't die mid-request.
 TOKEN_REFRESH_MARGIN = timedelta(seconds=60)
+
+logger = logging.getLogger(__name__)
 
 
 def get_google_access_token(user):
@@ -90,4 +93,9 @@ def download_drive_image(job_image, user):
         job_image.thumbnail.save(f"{job_image.pk}.jpg", ContentFile(thumb_bytes), save=True)
         return True
     except Exception:
+        logger.exception(
+            "Failed to download Drive file %s for JobImage %s",
+            job_image.drive_file_id,
+            job_image.pk,
+        )
         return False

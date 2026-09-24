@@ -62,6 +62,12 @@ services:
       RUNPOD_BASE_URL: "${RUNPOD_BASE_URL:-https://mm45wxdx8ku3z1.api.runpod.ai}"
       RUNPOD_API_KEY: "${RUNPOD_API_KEY:?RUNPOD_API_KEY must be set}"
 
+      # ── Optional: auto-create a superuser on first boot (see
+      #    ensure_superuser management command). Leave unset to skip. ───────
+      DJANGO_SUPERUSER_USERNAME: "${DJANGO_SUPERUSER_USERNAME:-}"
+      DJANGO_SUPERUSER_EMAIL: "${DJANGO_SUPERUSER_EMAIL:-}"
+      DJANGO_SUPERUSER_PASSWORD: "${DJANGO_SUPERUSER_PASSWORD:-}"
+
       # ── gunicorn tuning — gthread workers (set in docker/entrypoint.sh) so
       #    a slow-but-legitimate SSE response (image processing, Drive
       #    upload progress) isn't killed by --timeout; size WORKERS/THREADS
