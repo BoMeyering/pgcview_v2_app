@@ -30,7 +30,8 @@ services:
     restart: unless-stopped
 
   web:
-    image: "${IMAGE_NAME:-pgcview_app}:${IMAGE_TAG:-latest}"
+    # image: "${IMAGE_NAME:-pgcview_app}:${IMAGE_TAG:-latest}"
+    image: ghcr.io/bomeyering/pgcview_v2_app:v0.0.1
     # Runs tini as real PID 1 so both gunicorn's and supercronic's child
     # processes get reaped properly, and signals still forward correctly.
     init: true
