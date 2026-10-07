@@ -1,10 +1,12 @@
 {% load socialaccount %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign In — PGCView</title>
+  <link rel="icon" type="image/png" href="{% static 'favicon.png' %}">
   <script>
     (function () {
       const stored = localStorage.getItem('pgcview-theme');
@@ -24,6 +26,11 @@
               50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0',
               400: '#4ade80', 500: '#22c55e', 600: '#16a34a',
               700: '#15803d', 800: '#166534', 900: '#14532d',
+            },
+            forest: {
+              100: '#e4f1e8', 200: '#c6dccd', 300: '#a5c0af',
+              400: '#7f9f8c', 500: '#5c7a69', 600: '#40594c',
+              700: '#2c3f36', 800: '#1c2c24', 900: '#111d17',
             }
           }
         }
@@ -54,12 +61,7 @@
 
     {# Logo #}
     <a href="/" class="relative z-10 flex items-center gap-2.5">
-      <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600">
-        <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909" />
-        </svg>
-      </div>
+      {% include "components/logo.html" %}
       <span class="text-lg font-bold text-white">PGCView</span>
     </a>
 
@@ -103,29 +105,24 @@
   </div>
 
   {# ── Right: Sign-in panel ───────────────────────────────────────────────── #}
-  <div class="flex flex-1 flex-col items-center justify-center bg-white dark:bg-slate-900 px-8 py-12">
+  <div class="flex flex-1 flex-col items-center justify-center bg-white dark:bg-forest-900 px-8 py-12">
 
     {# Mobile logo #}
     <a href="/" class="mb-10 flex items-center gap-2 lg:hidden">
-      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
-        <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159" />
-        </svg>
-      </div>
-      <span class="text-base font-bold text-gray-900">PGCView</span>
+      {% include "components/logo.html" with tile_class="w-8 h-8 rounded-lg" icon_class="w-6 h-6" %}
+      <span class="text-base font-bold text-gray-900 dark:text-forest-100">PGCView</span>
     </a>
 
     <div class="w-full max-w-sm">
 
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-slate-100">Welcome back</h2>
-      <p class="mt-1.5 text-sm text-gray-500 dark:text-slate-400">Sign in with your Google account to continue.</p>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-forest-100">Welcome back</h2>
+      <p class="mt-1.5 text-sm text-gray-500 dark:text-forest-400">Sign in with your Google account to continue.</p>
 
       <div class="mt-8">
         {% providers_media_js %}
 
         <a href="{% provider_login_url 'google' %}"
-           class="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3.5 text-sm font-semibold text-gray-700 dark:text-slate-200 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2">
+           class="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 dark:border-forest-600 bg-white dark:bg-forest-800 px-4 py-3.5 text-sm font-semibold text-gray-700 dark:text-forest-200 shadow-sm hover:bg-gray-50 dark:hover:bg-forest-700 transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2">
           <svg class="h-5 w-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>

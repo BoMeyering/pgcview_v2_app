@@ -2,7 +2,7 @@
 
 {% block title %}Job History — PGCView{% endblock %}
 {% block page_title %}Job History{% endblock %}
-{% block page_subtitle %}<p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">All submitted jobs</p>{% endblock %}
+{% block page_subtitle %}<p class="text-xs text-gray-400 dark:text-forest-500 mt-0.5">All submitted jobs</p>{% endblock %}
 
 {% block header_actions %}
 <a href="{% url 'jobs:submit' %}"
@@ -20,55 +20,55 @@
 <div class="mb-4 flex flex-wrap gap-2">
   <a href="{% url 'jobs:history' %}"
      class="rounded-lg px-3 py-1.5 text-xs font-medium transition
-            {% if not status_filter %}bg-brand-600 text-white{% else %}bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700{% endif %}">
+            {% if not status_filter %}bg-brand-600 text-white{% else %}bg-white dark:bg-forest-800 border border-gray-200 dark:border-forest-700 text-gray-600 dark:text-forest-400 hover:bg-gray-50 dark:hover:bg-forest-700{% endif %}">
     All
   </a>
   {% for value, label in status_choices %}
   <a href="?status={{ value }}"
      class="rounded-lg px-3 py-1.5 text-xs font-medium transition
-            {% if status_filter == value %}bg-brand-600 text-white{% else %}bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700{% endif %}">
+            {% if status_filter == value %}bg-brand-600 text-white{% else %}bg-white dark:bg-forest-800 border border-gray-200 dark:border-forest-700 text-gray-600 dark:text-forest-400 hover:bg-gray-50 dark:hover:bg-forest-700{% endif %}">
     {{ label }}
   </a>
   {% endfor %}
 </div>
 
 {# ── Jobs table ──────────────────────────────────────────────────────────── #}
-<div class="rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden">
+<div class="rounded-2xl bg-white dark:bg-forest-800 border border-gray-100 dark:border-forest-700 shadow-sm overflow-hidden">
 
   {% if jobs %}
-  <table class="min-w-full divide-y divide-gray-100 dark:divide-slate-700">
+  <table class="min-w-full divide-y divide-gray-100 dark:divide-forest-700">
     <thead>
-      <tr class="bg-gray-50 dark:bg-slate-700/50">
-        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Job</th>
-        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Source</th>
-        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Images</th>
-        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Status</th>
-        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Submitted</th>
-        <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Actions</th>
+      <tr class="bg-gray-50 dark:bg-forest-700/50">
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-forest-400 uppercase tracking-wide">Job</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-forest-400 uppercase tracking-wide">Source</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-forest-400 uppercase tracking-wide">Images</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-forest-400 uppercase tracking-wide">Status</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-forest-400 uppercase tracking-wide">Submitted</th>
+        <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-forest-400 uppercase tracking-wide">Actions</th>
       </tr>
     </thead>
-    <tbody class="divide-y divide-gray-50 dark:divide-slate-700/50">
+    <tbody class="divide-y divide-gray-50 dark:divide-forest-700/50">
       {% for job in jobs %}
-      <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/40 transition-colors">
+      <tr class="hover:bg-gray-50 dark:hover:bg-forest-700/40 transition-colors">
         <td class="px-5 py-3.5">
           <a href="{% url 'jobs:detail' pk=job.pk %}" class="hover:text-brand-600 dark:hover:text-brand-400">
-            <p class="text-sm font-medium text-gray-900 dark:text-slate-100">{{ job.name }}</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-forest-100">{{ job.name }}</p>
           </a>
           {% if job.description %}
-            <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5 truncate max-w-xs">{{ job.description }}</p>
+            <p class="text-xs text-gray-400 dark:text-forest-500 mt-0.5 truncate max-w-xs">{{ job.description }}</p>
           {% endif %}
         </td>
         <td class="px-5 py-3.5">
-          <span class="text-xs text-gray-600 dark:text-slate-400">{{ job.get_source_display }}</span>
+          <span class="text-xs text-gray-600 dark:text-forest-400">{{ job.get_source_display }}</span>
         </td>
         <td class="px-5 py-3.5">
-          <span class="text-sm text-gray-700 dark:text-slate-300">{{ job.image_count }}</span>
+          <span class="text-sm text-gray-700 dark:text-forest-300">{{ job.image_count }}</span>
         </td>
         <td class="px-5 py-3.5">
           {% include "components/status_badge.html" with status=job.status label=job.get_status_display %}
         </td>
         <td class="px-5 py-3.5">
-          <span class="text-xs text-gray-500 dark:text-slate-400" title="{{ job.created_at|date:'Y-m-d H:i:s' }} UTC">
+          <span class="text-xs text-gray-500 dark:text-forest-400" title="{{ job.created_at|date:'Y-m-d H:i:s' }} UTC">
             {{ job.created_at|timesince }} ago
           </span>
         </td>
@@ -90,7 +90,7 @@
             {% endif %}
             <button type="button"
                     onclick="window.dispatchEvent(new CustomEvent('delete-job', { bubbles: true, detail: { name: '{{ job.name|escapejs }}', url: '{% url 'jobs:delete' pk=job.pk %}' } }))"
-                    class="rounded-lg px-2.5 py-1 text-xs font-medium text-gray-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                    class="rounded-lg px-2.5 py-1 text-xs font-medium text-gray-400 dark:text-forest-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors">
               Delete
             </button>
           </div>
@@ -102,13 +102,13 @@
 
   {% else %}
   <div class="flex flex-col items-center justify-center py-14 text-center">
-    <div class="flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-100 dark:bg-slate-700 mb-3">
-      <svg class="w-6 h-6 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+    <div class="flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-100 dark:bg-forest-700 mb-3">
+      <svg class="w-6 h-6 text-gray-400 dark:text-forest-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round"
           d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75z" />
       </svg>
     </div>
-    <p class="text-sm font-medium text-gray-700 dark:text-slate-300">
+    <p class="text-sm font-medium text-gray-700 dark:text-forest-300">
       {% if status_filter %}No {{ status_filter }} jobs found.{% else %}No jobs yet.{% endif %}
     </p>
     {% if not status_filter %}

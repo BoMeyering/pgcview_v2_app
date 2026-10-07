@@ -5,4 +5,5 @@ app_name = "accounts"
 
 urlpatterns = [
     path("pending/", views.pending_approval, name="pending_approval"),
+    path("about/", views.about, name="about"),
 ]

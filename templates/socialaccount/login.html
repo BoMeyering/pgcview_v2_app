@@ -1,10 +1,12 @@
 {% load i18n %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% if process == "connect" %}Connect {{ provider.name }}{% else %}Sign In — PGCView{% endif %}</title>
+  <link rel="icon" type="image/png" href="{% static 'favicon.png' %}">
   <script>
     (function () {
       const stored = localStorage.getItem('pgcview-theme');
@@ -24,6 +26,11 @@
               50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0',
               400: '#4ade80', 500: '#22c55e', 600: '#16a34a',
               700: '#15803d', 800: '#166534', 900: '#14532d',
+            },
+            forest: {
+              100: '#e4f1e8', 200: '#c6dccd', 300: '#a5c0af',
+              400: '#7f9f8c', 500: '#5c7a69', 600: '#40594c',
+              700: '#2c3f36', 800: '#1c2c24', 900: '#111d17',
             }
           }
         }
@@ -50,12 +57,7 @@
       </svg>
     </div>
     <a href="/" class="relative z-10 flex items-center gap-2.5">
-      <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600">
-        <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909" />
-        </svg>
-      </div>
+      {% include "components/logo.html" %}
       <span class="text-lg font-bold text-white">PGCView</span>
     </a>
     <div class="relative z-10 my-auto">
@@ -96,18 +98,13 @@
   </div>
 
   {# ── Right: confirmation panel ───────────────────────────────────────────── #}
-  <div class="flex flex-1 flex-col items-center justify-center bg-white dark:bg-slate-900 px-8 py-12">
-    <div class="w-full max-w-sm dark:text-slate-100">
+  <div class="flex flex-1 flex-col items-center justify-center bg-white dark:bg-forest-900 px-8 py-12">
+    <div class="w-full max-w-sm dark:text-forest-100">
 
       {# Mobile logo #}
       <a href="/" class="mb-10 flex items-center justify-center gap-2 lg:hidden">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
-          <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159" />
-          </svg>
-        </div>
-        <span class="text-base font-bold text-gray-900">PGCView</span>
+        {% include "components/logo.html" with tile_class="w-8 h-8 rounded-lg" icon_class="w-6 h-6" %}
+        <span class="text-base font-bold text-gray-900 dark:text-forest-100">PGCView</span>
       </a>
 
       {# Google icon #}
@@ -128,8 +125,8 @@
           You are about to connect your Google account to PGCView.
         </p>
       {% else %}
-        <h2 class="text-center text-2xl font-bold text-gray-900 dark:text-slate-100">Continue with Google</h2>
-        <p class="mt-2 text-center text-sm text-gray-500 dark:text-slate-400">
+        <h2 class="text-center text-2xl font-bold text-gray-900 dark:text-forest-100">Continue with Google</h2>
+        <p class="mt-2 text-center text-sm text-gray-500 dark:text-forest-400">
           You will be redirected to Google to complete sign-in.
         </p>
       {% endif %}
@@ -138,7 +135,7 @@
         {% csrf_token %}
         {{ redirect_field }}
         <button type="submit"
-                class="w-full rounded-xl bg-brand-600 px-4 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+                class="w-full rounded-xl bg-brand-600 px-4 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:focus:ring-offset-forest-900">
           Continue to Google
         </button>
       </form>

@@ -2,7 +2,7 @@ import base64
 import io
 import math
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
 
 from .runpod_client import INFERENCE_SIZE
 
@@ -29,8 +29,15 @@ CLASS_INFO = [
 CLASS_PALETTE = {idx: rgb for idx, (_name, rgb) in enumerate(CLASS_INFO)}
 CLASS_COLORS_HEX = {name: "#%02x%02x%02x" % rgb for name, rgb in CLASS_INFO}
 
+THUMBNAIL_MAX_DIM = 320
+
 ROI_COLOR = (255, 255, 0)
 ALPHA = 0.5
+# Everything outside the ROI is excluded from class_proportions — desaturate and
+# darken it so it's visually obvious only the interior counts.
+OUTSIDE_ROI_SATURATION = 0.15
+OUTSIDE_ROI_BRIGHTNESS = 0.6
+ROI_MASK_FEATHER = 3
 
 
 def _flat_palette():
@@ -48,11 +55,32 @@ def _ordered_roi_points(roi_bboxes, sx, sy):
     return sorted(midpoints, key=lambda p: math.atan2(p[1] - cy, p[0] - cx))
 
 
-def build_overlay_png(job_image):
-    """Render the segmentation class map + ROI polygon over the original image. Returns PNG bytes."""
+def build_thumbnail_jpeg(path, max_dim):
+    """Plain (no overlay) resized copy of an uploaded image, for lightweight grid
+    display before inference has run. Returns JPEG bytes."""
+    image = Image.open(path)
+    image = ImageOps.exif_transpose(image)
+    image.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+    buf = io.BytesIO()
+    image.convert("RGB").save(buf, format="JPEG", quality=82)
+    return buf.getvalue()
+
+
+def build_overlay_png(job_image, max_dim=None, fmt="PNG", quality=90):
+    """Render the segmentation class map + ROI polygon over the original image.
+    Returns encoded image bytes in `fmt` ("PNG" or "JPEG"; `quality` only applies to JPEG).
+
+    If max_dim is given, the original is downscaled to fit within it first, so all
+    downstream compositing runs on the smaller image (cheap thumbnails vs. full-res).
+    """
     result = job_image.result
     original = Image.open(job_image.image.path).convert("RGB")
     orig_w, orig_h = original.size
+
+    if max_dim and max(orig_w, orig_h) > max_dim:
+        scale = max_dim / max(orig_w, orig_h)
+        orig_w, orig_h = round(orig_w * scale), round(orig_h * scale)
+        original = original.resize((orig_w, orig_h), Image.Resampling.LANCZOS)
 
     class_map_png = base64.b64decode(result["segmentation"]["output_map"])
     class_map = Image.open(io.BytesIO(class_map_png)).convert("L")
@@ -73,9 +101,21 @@ def build_overlay_png(job_image):
         sx = orig_w / INFERENCE_SIZE
         sy = orig_h / INFERENCE_SIZE
         points = _ordered_roi_points(roi_bboxes, sx, sy)
+
+        dimmed = ImageEnhance.Color(original).enhance(OUTSIDE_ROI_SATURATION)
+        dimmed = ImageEnhance.Brightness(dimmed).enhance(OUTSIDE_ROI_BRIGHTNESS)
+
+        roi_mask = Image.new("L", overlay.size, 0)
+        ImageDraw.Draw(roi_mask).polygon(points, fill=255)
+        roi_mask = roi_mask.filter(ImageFilter.GaussianBlur(ROI_MASK_FEATHER))
+        overlay = Image.composite(overlay, dimmed, roi_mask)
+
         draw = ImageDraw.Draw(overlay)
         draw.polygon(points, outline=ROI_COLOR, width=3)
 
     buf = io.BytesIO()
-    overlay.save(buf, format="PNG")
+    if fmt == "JPEG":
+        overlay.save(buf, format="JPEG", quality=quality)
+    else:
+        overlay.save(buf, format="PNG")
     return buf.getvalue()

@@ -3,7 +3,7 @@
 
 {% block title %}Submit Images — PGCView{% endblock %}
 {% block page_title %}Submit New Images{% endblock %}
-{% block page_subtitle %}<p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">Upload images for analysis</p>{% endblock %}
+{% block page_subtitle %}<p class="text-xs text-gray-400 dark:text-forest-500 mt-0.5">Upload images for analysis</p>{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto">
@@ -21,12 +21,12 @@
   <div class="space-y-5">
 
     {# ── Job info card ──────────────────────────────────────────────────── #}
-    <div class="rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-5">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100 mb-4">Job Details</h3>
+    <div class="rounded-2xl bg-white dark:bg-forest-800 border border-gray-100 dark:border-forest-700 shadow-sm p-5">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-forest-100 mb-4">Job Details</h3>
 
       <div class="space-y-4">
         <div>
-          <label for="{{ form.name.id_for_label }}" class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+          <label for="{{ form.name.id_for_label }}" class="block text-xs font-medium text-gray-700 dark:text-forest-300 mb-1.5">
             Job Name <span class="text-red-500">*</span>
           </label>
           {{ form.name }}
@@ -45,8 +45,8 @@
     </div>
 
     {# ── Image source card ──────────────────────────────────────────────── #}
-    <div class="rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-5">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100 mb-4">Image Source</h3>
+    <div class="rounded-2xl bg-white dark:bg-forest-800 border border-gray-100 dark:border-forest-700 shadow-sm p-5">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-forest-100 mb-4">Image Source</h3>
 
       {# Source tabs #}
       <div class="flex gap-2 mb-5">
@@ -54,7 +54,7 @@
                 @click="source = 'local'"
                 :class="source === 'local'
                   ? 'bg-brand-600 text-white shadow-sm'
-                  : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-600'"
+                  : 'bg-gray-100 dark:bg-forest-700 text-gray-600 dark:text-forest-400 hover:bg-gray-200 dark:hover:bg-forest-600'"
                 class="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round"
@@ -67,7 +67,7 @@
                 @click="source = 'google_drive'"
                 :class="source === 'google_drive'
                   ? 'bg-brand-600 text-white shadow-sm'
-                  : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-600'"
+                  : 'bg-gray-100 dark:bg-forest-700 text-gray-600 dark:text-forest-400 hover:bg-gray-200 dark:hover:bg-forest-600'"
                 class="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition">
           <svg class="w-4 h-4" viewBox="0 0 87.3 78" fill="currentColor">
             <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3L27.5 53H0c0 1.55.4 3.1 1.2 4.5z" fill="{% if source == 'google_drive' %}white{% else %}#0066DA{% endif %}"/>
@@ -88,7 +88,7 @@
           @dragover.prevent="dragOver = true"
           @dragleave.prevent="dragOver = false"
           @drop.prevent="handleDrop($event)"
-          :class="dragOver ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20' : 'border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700'"
+          :class="dragOver ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20' : 'border-gray-300 dark:border-forest-600 bg-gray-50 dark:bg-forest-700/50 hover:bg-gray-100 dark:hover:bg-forest-700'"
           class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 transition cursor-pointer"
           @click="$refs.fileInput.click()">
           <svg class="w-10 h-10 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
@@ -187,15 +187,36 @@
     {# Hidden source field #}
     <input type="hidden" name="source" :value="source" />
 
-    {# Upload progress bar #}
+    {% comment %}
+    Upload progress bar — local uploads track real request bytes; Drive jobs
+    track real per-file server-side fetch progress (the request body for a
+    Drive job is just a small file-id list, so byte progress would jump to
+    100% almost instantly and say nothing about the actual Drive fetches).
+    {% endcomment %}
     <div x-show="submitting" x-transition>
-      <div class="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400 mb-1.5">
-        <span>Uploading…</span>
-        <span x-text="uploadProgress + '%'"></span>
-      </div>
-      <div class="h-2 rounded-full bg-gray-100 dark:bg-slate-700 overflow-hidden">
-        <div class="h-full bg-brand-500 transition-all duration-150" :style="`width: ${uploadProgress}%`"></div>
-      </div>
+      <template x-if="source === 'google_drive'">
+        <div>
+          <div class="flex items-center justify-between text-xs text-gray-500 dark:text-forest-400 mb-1.5">
+            <span x-text="driveTotal > 0 ? `Fetching ${driveDone} of ${driveTotal} — ${driveCurrentName}` : 'Starting…'"></span>
+            <span x-text="(driveTotal > 0 ? Math.round((driveDone / driveTotal) * 100) : 0) + '%'"></span>
+          </div>
+          <div class="h-2 rounded-full bg-gray-100 dark:bg-forest-700 overflow-hidden">
+            <div class="h-full bg-brand-500 transition-all duration-150"
+                 :style="`width: ${driveTotal > 0 ? Math.round((driveDone / driveTotal) * 100) : 0}%`"></div>
+          </div>
+        </div>
+      </template>
+      <template x-if="source !== 'google_drive'">
+        <div>
+          <div class="flex items-center justify-between text-xs text-gray-500 dark:text-forest-400 mb-1.5">
+            <span>Uploading…</span>
+            <span x-text="uploadProgress + '%'"></span>
+          </div>
+          <div class="h-2 rounded-full bg-gray-100 dark:bg-forest-700 overflow-hidden">
+            <div class="h-full bg-brand-500 transition-all duration-150" :style="`width: ${uploadProgress}%`"></div>
+          </div>
+        </div>
+      </template>
     </div>
 
     {# Submit button #}
@@ -237,6 +258,9 @@ function submitJob() {
     dragOver: false,
     submitting: false,
     uploadProgress: 0,
+    driveTotal: 0,
+    driveDone: 0,
+    driveCurrentName: '',
     googleToken: GOOGLE_TOKEN,
 
     init() {
@@ -284,15 +308,29 @@ function submitJob() {
       this.driveFiles.splice(index, 1);
     },
 
-    openDrivePicker() {
+    async openDrivePicker() {
       if (!GOOGLE_TOKEN) {
         alert('Google Drive access is not available. Please sign in again.');
         return;
       }
-      window.openGooglePicker(GOOGLE_TOKEN, GOOGLE_API_KEY);
+      // Fetch a live token rather than reusing the one embedded at page-load —
+      // access tokens expire in ~1hr, so a tab left open goes stale otherwise.
+      let token = GOOGLE_TOKEN;
+      try {
+        const resp = await fetch('{% url "jobs:google_token_api" %}');
+        const data = await resp.json();
+        if (data.token) token = data.token;
+      } catch (e) {
+        // Fall back to the page-load token if the refresh call itself fails.
+      }
+      if (!token) {
+        alert('Your Google Drive access has expired. Please sign out and sign back in.');
+        return;
+      }
+      window.openGooglePicker(token, GOOGLE_API_KEY);
     },
 
-    handleSubmit() {
+    async handleSubmit() {
       if (this.source === 'local' && this.localFiles.length === 0) {
         alert('Please select at least one image file.');
         return;
@@ -303,8 +341,17 @@ function submitJob() {
       }
       this.submitting = true;
       this.uploadProgress = 0;
+      this.driveTotal = 0;
+      this.driveDone = 0;
+      this.driveCurrentName = '';
 
       const form = document.getElementById('submitForm');
+
+      if (this.source === 'google_drive') {
+        await this.submitDriveJob(form);
+        return;
+      }
+
       const formData = new FormData(form);
       const xhr = new XMLHttpRequest();
       xhr.open('POST', form.action, true);
@@ -332,6 +379,65 @@ function submitJob() {
       };
 
       xhr.send(formData);
+    },
+
+    // Drive jobs don't upload any image bytes in the request — the server
+    // fetches each file from Drive itself — so there's no byte-progress event
+    // to track. The server streams real per-file progress instead (same SSE
+    // pattern as the processing step on the configure page); read it here.
+    async submitDriveJob(form) {
+      const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'X-CSRFToken': csrfToken },
+        });
+
+        const contentType = response.headers.get('Content-Type') || '';
+        if (!response.body || !contentType.includes('text/event-stream')) {
+          // Not a stream (e.g. validation failed server-side) — follow wherever it landed.
+          window.location.href = response.url;
+          return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          let boundary;
+          while ((boundary = buffer.indexOf('\n\n')) !== -1) {
+            const rawEvent = buffer.slice(0, boundary);
+            buffer = buffer.slice(boundary + 2);
+
+            let eventType = 'message';
+            let dataLine = '';
+            for (const line of rawEvent.split('\n')) {
+              if (line.startsWith('event:')) eventType = line.slice(6).trim();
+              if (line.startsWith('data:')) dataLine = line.slice(5).trim();
+            }
+            if (!dataLine) continue;
+            const payload = JSON.parse(dataLine);
+
+            if (eventType === 'progress') {
+              this.driveTotal = payload.total;
+              this.driveDone = payload.current - 1;
+              this.driveCurrentName = payload.filename;
+            } else if (eventType === 'done') {
+              window.location.href = payload.redirect;
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        this.submitting = false;
+        alert('Upload failed. Please check your connection and try again.');
+      }
     }
   }
 }
