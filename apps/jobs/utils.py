@@ -13,6 +13,8 @@ from googleapiclient.http import MediaIoBaseDownload
 
 from .overlay import THUMBNAIL_MAX_DIM, build_thumbnail_jpeg
 
+SAMPLE_IMAGES_DIR = settings.BASE_DIR / "sample_images"
+
 # Refresh a bit before the real expiry so a token doesn't die mid-request.
 TOKEN_REFRESH_MARGIN = timedelta(seconds=60)
 
@@ -63,6 +65,18 @@ def get_google_access_token(user):
         token.expires_at = timezone.make_aware(credentials.expiry) if timezone.is_naive(credentials.expiry) else credentials.expiry
     token.save(update_fields=["token", "expires_at"])
     return token.token
+
+
+def populate_sample_images(job):
+    """Attaches the baked-in sample images (see `sample_images/` at the repo root)
+    to `job` as JobImage rows, same as a local upload would."""
+    from .models import JobImage
+
+    for path in sorted(SAMPLE_IMAGES_DIR.glob("*.jpg")):
+        img = JobImage.objects.create(job=job, original_filename=path.name)
+        img.image.save(path.name, ContentFile(path.read_bytes()), save=True)
+        thumb_bytes = build_thumbnail_jpeg(img.image.path, max_dim=THUMBNAIL_MAX_DIM)
+        img.thumbnail.save(f"{img.pk}.jpg", ContentFile(thumb_bytes), save=True)
 
 
 def download_drive_image(job_image, user):

@@ -18,6 +18,7 @@ class Job(models.Model):
     class Source(models.TextChoices):
         LOCAL = "local", "Local Upload"
         GOOGLE_DRIVE = "google_drive", "Google Drive"
+        SAMPLE = "sample", "Sample Images"
 
     class MarkerType(models.TextChoices):
         ALL = "all", "Auto-detect"

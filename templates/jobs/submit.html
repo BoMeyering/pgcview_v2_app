@@ -220,7 +220,15 @@
     </div>
 
     {# Submit button #}
-    <div class="flex justify-end gap-3">
+    <div class="flex items-center justify-between gap-3">
+      <form method="POST" action="{% url 'jobs:submit_sample' %}">
+        {% csrf_token %}
+        <button type="submit"
+                class="text-sm font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300">
+          Just want to see how it works? Try a sample job instead →
+        </button>
+      </form>
+      <div class="flex gap-3">
       <a href="{% url 'jobs:dashboard' %}"
          class="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
         Cancel
@@ -235,6 +243,7 @@
         </svg>
         <span x-text="submitting ? 'Uploading…' : 'Upload Images'"></span>
       </button>
+      </div>
     </div>
 
   </div>
