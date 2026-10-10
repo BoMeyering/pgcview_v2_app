@@ -19,7 +19,7 @@ from .forms import JobConfigureForm, JobSubmitForm
 from .models import Job, JobImage
 from .overlay import CLASS_COLORS_HEX, THUMBNAIL_MAX_DIM, build_overlay_png, build_thumbnail_jpeg
 from .runpod_client import RunPodError, run_full_pipeline, wait_for_ready
-from .utils import download_drive_image, get_google_access_token
+from .utils import download_drive_image, get_google_access_token, populate_sample_images
 
 MODAL_MAX_DIM = 1600
 OVERLAY_CACHE_CONTROL = "private, max-age=86400, immutable"
@@ -214,6 +214,23 @@ def job_submit(request):
         "google_token": google_token,
         "google_api_key": settings.GOOGLE_API_KEY,
     })
+
+
+@login_required
+@require_POST
+def job_submit_sample(request):
+    """Creates a job from the baked-in sample images, skipping the upload form
+    entirely, so a new user can see a real result without supplying their own images."""
+    job = Job.objects.create(
+        user=request.user,
+        name="Sample Job",
+        description="Auto-generated from the app's built-in sample images.",
+        source=Job.Source.SAMPLE,
+        status=Job.Status.QUEUED,
+    )
+    populate_sample_images(job)
+    messages.success(request, f'{job.image_count} sample image(s) loaded. Configure the job to start processing.')
+    return redirect("jobs:configure", pk=job.pk)
 
 
 @login_required
