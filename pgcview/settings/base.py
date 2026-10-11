@@ -49,7 +49,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
-    "apps.accounts.middleware.ApprovalRequiredMiddleware",
 ]
 
 ROOT_URLCONF = "pgcview.urls"
@@ -110,7 +109,6 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_ALLOW_REGISTRATION = False  # No manual email/password signup
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_STORE_TOKENS = True
-SOCIALACCOUNT_ADAPTER = "apps.accounts.adapters.SocialAccountAdapter"
 # Auto-connect Google account to existing user with the same email (fixes login loop)
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True

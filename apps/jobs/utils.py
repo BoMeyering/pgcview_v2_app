@@ -14,6 +14,8 @@ from googleapiclient.http import MediaIoBaseDownload
 from .overlay import THUMBNAIL_MAX_DIM, build_thumbnail_jpeg
 
 SAMPLE_IMAGES_DIR = settings.BASE_DIR / "sample_images"
+# Pre-rendered by `manage.py build_sample_thumbnails` (run in the Dockerfile).
+SAMPLE_THUMBS_DIR = SAMPLE_IMAGES_DIR / "thumbs"
 
 # Refresh a bit before the real expiry so a token doesn't die mid-request.
 TOKEN_REFRESH_MARGIN = timedelta(seconds=60)
@@ -75,7 +77,11 @@ def populate_sample_images(job):
     for path in sorted(SAMPLE_IMAGES_DIR.glob("*.jpg")):
         img = JobImage.objects.create(job=job, original_filename=path.name)
         img.image.save(path.name, ContentFile(path.read_bytes()), save=True)
-        thumb_bytes = build_thumbnail_jpeg(img.image.path, max_dim=THUMBNAIL_MAX_DIM)
+        prebuilt = SAMPLE_THUMBS_DIR / path.name
+        if prebuilt.exists():
+            thumb_bytes = prebuilt.read_bytes()
+        else:
+            thumb_bytes = build_thumbnail_jpeg(img.image.path, max_dim=THUMBNAIL_MAX_DIM)
         img.thumbnail.save(f"{img.pk}.jpg", ContentFile(thumb_bytes), save=True)
 
 

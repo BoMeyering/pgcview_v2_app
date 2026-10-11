@@ -34,6 +34,10 @@ RUN chmod +x docker/entrypoint.sh
 # SECRET_KEY from the environment takes over.
 RUN SECRET_KEY=build-time-placeholder python manage.py collectstatic --noinput
 
+# Same placeholder trick: pre-renders the sample-image thumbnails so the
+# "Try a Sample Job" button doesn't re-thumbnail every full-size sample per click.
+RUN SECRET_KEY=build-time-placeholder python manage.py build_sample_thumbnails
+
 RUN useradd --create-home --uid 1000 django \
     # media/ is excluded by .dockerignore (real uploads shouldn't be baked
     # into the image), so it never exists here via COPY. It still needs to
