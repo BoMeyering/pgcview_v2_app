@@ -28,7 +28,6 @@ class Command(BaseCommand):
                 "email": email,
                 "is_staff": True,
                 "is_superuser": True,
-                "is_approved": True,
             },
         )
         if created:

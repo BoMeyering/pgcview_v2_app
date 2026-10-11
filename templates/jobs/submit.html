@@ -221,13 +221,13 @@
 
     {# Submit button #}
     <div class="flex items-center justify-between gap-3">
-      <form method="POST" action="{% url 'jobs:submit_sample' %}">
-        {% csrf_token %}
-        <button type="submit"
-                class="text-sm font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300">
-          Just want to see how it works? Try a sample job instead →
-        </button>
-      </form>
+      {% comment %}Targets #sampleJobForm (below, outside #submitForm) via the form= attribute —
+         forms can't nest, so an inline <form> here would submit the upload form instead.{% endcomment %}
+      <button type="submit" form="sampleJobForm" x-data="{ loading: false }"
+              @click="$nextTick(() => loading = true)" :disabled="loading"
+              class="text-sm font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 disabled:opacity-60 disabled:cursor-wait">
+        <span x-text="loading ? 'Loading sample images…' : 'Just want to see how it works? Try a sample job instead →'">Just want to see how it works? Try a sample job instead →</span>
+      </button>
       <div class="flex gap-3">
       <a href="{% url 'jobs:dashboard' %}"
          class="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
@@ -247,6 +247,9 @@
     </div>
 
   </div>
+</form>
+<form method="POST" action="{% url 'jobs:submit_sample' %}" id="sampleJobForm">
+  {% csrf_token %}
 </form>
 </div>
 {% endblock %}

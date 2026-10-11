@@ -9,12 +9,5 @@ def landing(request):
 
 
 @login_required
-def pending_approval(request):
-    if request.user.is_approved:
-        return redirect("jobs:dashboard")
-    return render(request, "accounts/pending_approval.html")
-
-
-@login_required
 def about(request):
     return render(request, "accounts/about.html")

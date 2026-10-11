@@ -6,14 +6,14 @@
 {% block page_subtitle %}<p class="text-xs text-gray-400 dark:text-forest-500 mt-0.5">Your image analysis overview</p>{% endblock %}
 
 {% block header_actions %}
-<form method="POST" action="{% url 'jobs:submit_sample' %}">
+<form method="POST" action="{% url 'jobs:submit_sample' %}" x-data="{ loading: false }" @submit="loading = true">
   {% csrf_token %}
-  <button type="submit" title="Run a job on the app's built-in sample images"
-          class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-forest-600 bg-white dark:bg-forest-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-forest-300 shadow-sm hover:bg-gray-50 dark:hover:bg-forest-700 transition">
+  <button type="submit" :disabled="loading" title="Run a job on the app's built-in sample images"
+          class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-forest-600 bg-white dark:bg-forest-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-forest-300 shadow-sm hover:bg-gray-50 dark:hover:bg-forest-700 transition disabled:opacity-60 disabled:cursor-wait">
     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 21h18M3.75 3h16.5M4.5 3v18M19.5 3v18" />
     </svg>
-    Try a Sample Job
+    <span x-text="loading ? 'Loading samples…' : 'Try a Sample Job'">Try a Sample Job</span>
   </button>
 </form>
 <a href="{% url 'jobs:submit' %}"
@@ -130,14 +130,14 @@
     <p class="text-sm font-medium text-gray-700 dark:text-forest-300">No jobs yet</p>
     <p class="text-xs text-gray-400 dark:text-forest-500 mt-1">Submit your first job, or try a sample to see how it works.</p>
     <div class="mt-4 flex items-center gap-3">
-      <form method="POST" action="{% url 'jobs:submit_sample' %}">
+      <form method="POST" action="{% url 'jobs:submit_sample' %}" x-data="{ loading: false }" @submit="loading = true">
         {% csrf_token %}
-        <button type="submit"
-                class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-forest-600 bg-white dark:bg-forest-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-forest-300 hover:bg-gray-50 dark:hover:bg-forest-700 transition">
+        <button type="submit" :disabled="loading"
+                class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-forest-600 bg-white dark:bg-forest-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-forest-300 hover:bg-gray-50 dark:hover:bg-forest-700 transition disabled:opacity-60 disabled:cursor-wait">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 21h18M3.75 3h16.5M4.5 3v18M19.5 3v18" />
           </svg>
-          Try a Sample Job
+          <span x-text="loading ? 'Loading samples…' : 'Try a Sample Job'">Try a Sample Job</span>
         </button>
       </form>
       <a href="{% url 'jobs:submit' %}"
