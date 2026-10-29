@@ -18,4 +18,5 @@ urlpatterns = [
     path("jobs/<uuid:pk>/stop/", views.stop_job, name="stop"),
     path("jobs/<uuid:pk>/delete/", views.delete_job, name="delete"),
     path("api/google-token/", views.google_token_api, name="google_token_api"),
+    path("api/picker-error/", views.picker_error_api, name="picker_error_api"),
 ]
