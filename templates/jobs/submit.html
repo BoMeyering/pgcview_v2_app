@@ -258,6 +258,7 @@
 <script>
   const GOOGLE_API_KEY = "{{ google_api_key|escapejs }}";
   const GOOGLE_TOKEN   = "{{ google_token|escapejs }}";
+  window.PICKER_ERROR_URL = "{% url 'jobs:picker_error_api' %}";
 </script>
 <script src="https://apis.google.com/js/api.js"></script>
 <script src="{% static 'js/google_picker.js' %}"></script>
@@ -331,9 +332,14 @@ function submitJob() {
       try {
         const resp = await fetch('{% url "jobs:google_token_api" %}');
         const data = await resp.json();
+        if (data.drive_scope_missing) {
+          alert('PGCView doesn\'t have permission to read your Google Drive. Please sign out, sign back in, and make sure the Google Drive box is checked on the Google permissions screen.');
+          return;
+        }
         if (data.token) token = data.token;
       } catch (e) {
         // Fall back to the page-load token if the refresh call itself fails.
+        window.reportPickerError('token_fetch', e && e.message ? e.message : e);
       }
       if (!token) {
         alert('Your Google Drive access has expired. Please sign out and sign back in.');

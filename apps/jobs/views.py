@@ -1,5 +1,6 @@
 import csv
 import json
+import logging
 import shutil
 import zipfile
 from io import BytesIO
@@ -19,7 +20,9 @@ from .forms import JobConfigureForm, JobSubmitForm
 from .models import Job, JobImage
 from .overlay import CLASS_COLORS_HEX, THUMBNAIL_MAX_DIM, build_overlay_png, build_thumbnail_jpeg
 from .runpod_client import RunPodError, run_full_pipeline, wait_for_ready
-from .utils import download_drive_image, get_google_access_token, populate_sample_images
+from .utils import download_drive_image, get_google_access_token, populate_sample_images, token_has_drive_scope
+
+logger = logging.getLogger(__name__)
 
 MODAL_MAX_DIM = 1600
 OVERLAY_CACHE_CONTROL = "private, max-age=86400, immutable"
@@ -405,7 +408,41 @@ def delete_job(request, pk):
 def google_token_api(request):
     """Returns the user's current Google OAuth access token for the Drive Picker."""
     token = get_google_access_token(request.user)
+    drive_scope_missing = False
+    if not token:
+        logger.warning(
+            "No Google access token available for user %s (%s); Drive Picker cannot open",
+            request.user.pk,
+            request.user.email,
+        )
+    elif token_has_drive_scope(token) is False:
+        drive_scope_missing = True
+        logger.warning(
+            "Google token for user %s (%s) lacks Drive scope; prompting re-sign-in",
+            request.user.pk,
+            request.user.email,
+        )
     return JsonResponse({
         "token": token,
         "api_key": settings.GOOGLE_API_KEY,
+        "drive_scope_missing": drive_scope_missing,
     })
+
+
+@login_required
+@require_POST
+def picker_error_api(request):
+    """Logs a client-side Google Picker failure, which otherwise only ever
+    shows up in the user's browser console."""
+    try:
+        detail = json.loads(request.body or b"{}")
+    except ValueError:
+        detail = {}
+    logger.warning(
+        "Drive Picker error for user %s (%s): stage=%s message=%s",
+        request.user.pk,
+        request.user.email,
+        str(detail.get("stage", ""))[:100],
+        str(detail.get("message", ""))[:500],
+    )
+    return HttpResponse(status=204)

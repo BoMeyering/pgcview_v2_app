@@ -18,12 +18,29 @@ const IMAGE_MIME_TYPES = [
 let pickerApiLoaded = false;
 
 /**
+ * Sends a Picker failure to the server so it lands in the app logs — these
+ * errors otherwise only ever appear in the user's browser console.
+ * Expects the page to define window.PICKER_ERROR_URL and a csrf_token input.
+ */
+function reportPickerError(stage, message) {
+  console.error('Google Picker error [' + stage + ']:', message);
+  const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+  if (!window.PICKER_ERROR_URL || !csrfInput) return;
+  fetch(window.PICKER_ERROR_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfInput.value },
+    body: JSON.stringify({ stage: stage, message: String(message) }),
+  }).catch(() => {});
+}
+window.reportPickerError = reportPickerError;
+
+/**
  * @param {string} oauthToken   - User's Google OAuth access token (stored by allauth).
  * @param {string} developerKey - Browser API key with Google Picker API enabled.
  */
 function openGooglePicker(oauthToken, developerKey) {
   if (!oauthToken) {
-    console.error('No OAuth token available for Google Picker.');
+    reportPickerError('no_token', 'No OAuth token available for Google Picker.');
     alert('Google Drive access is unavailable. Please sign out and sign back in to grant Drive access.');
     return;
   }
@@ -65,17 +82,34 @@ function openGooglePicker(oauthToken, developerKey) {
     picker.setVisible(true);
   }
 
-  if (pickerApiLoaded) {
-    buildPicker();
-  } else {
-    gapi.load('picker', function () {
-      pickerApiLoaded = true;
+  function safeBuildPicker() {
+    try {
       buildPicker();
+    } catch (e) {
+      reportPickerError('build', e && e.message ? e.message : e);
+    }
+  }
+
+  if (pickerApiLoaded) {
+    safeBuildPicker();
+  } else {
+    gapi.load('picker', {
+      callback: function () {
+        pickerApiLoaded = true;
+        safeBuildPicker();
+      },
+      onerror: function () {
+        reportPickerError('gapi_load', 'Failed to load the Google Picker API.');
+      },
     });
   }
 }
 
 function pickerCallback(data) {
+  if (data.action === google.picker.Action.ERROR) {
+    reportPickerError('picker_callback', JSON.stringify(data));
+    return;
+  }
   if (data.action === google.picker.Action.PICKED) {
     const files = data.docs.map(doc => ({
       id:            doc.id,

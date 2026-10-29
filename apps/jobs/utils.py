@@ -2,6 +2,7 @@ import io
 import logging
 from datetime import timedelta
 
+import requests
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.utils import timezone
@@ -21,6 +22,9 @@ SAMPLE_THUMBS_DIR = SAMPLE_IMAGES_DIR / "thumbs"
 TOKEN_REFRESH_MARGIN = timedelta(seconds=60)
 
 logger = logging.getLogger(__name__)
+
+DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.readonly"
+TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo"
 
 
 def get_google_access_token(user):
@@ -67,6 +71,24 @@ def get_google_access_token(user):
         token.expires_at = timezone.make_aware(credentials.expiry) if timezone.is_naive(credentials.expiry) else credentials.expiry
     token.save(update_fields=["token", "expires_at"])
     return token.token
+
+
+def token_has_drive_scope(access_token):
+    """Returns whether Google says `access_token` carries the Drive scope.
+
+    Users can untick Drive on Google's consent screen and still sign in, which
+    leaves the Picker 403ing in the browser. Returns None if Google can't be
+    reached, so callers don't block the Picker on a transient failure.
+    """
+    try:
+        resp = requests.get(TOKENINFO_URL, params={"access_token": access_token}, timeout=5)
+    except requests.RequestException:
+        logger.exception("Google tokeninfo lookup failed")
+        return None
+    if resp.status_code != 200:
+        # Google answers 400 for an invalid/expired token.
+        return False
+    return DRIVE_SCOPE in resp.json().get("scope", "").split()
 
 
 def populate_sample_images(job):
